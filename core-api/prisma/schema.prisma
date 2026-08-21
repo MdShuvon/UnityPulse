@@ -1,0 +1,364 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PostVisibility {
+  PUBLIC
+  MEMBERS_ONLY
+  ORG_ONLY
+}
+
+// ─── USER ───────────────────────────────────────
+model User {
+  id              String    @id @default(cuid())
+  name            String
+  email           String    @unique
+  phone           String    @unique
+  password        String
+  role            String    @default("MEMBER")
+  isVerified      Boolean   @default(false)
+  twoFASecret     String?
+  twoFAEnabled    Boolean   @default(false)
+  bio             String?
+  profilePhoto    String?
+  dateOfBirth     DateTime?
+  gender          String?
+  address         String?
+  occupation      String?
+  privacySettings Json?
+  areaId          String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  area            Area?             @relation(fields: [areaId], references: [id])
+  notifications   Notification[]
+  points          PointLedger[]
+  memberships     OrgMembership[]
+  donations       Donation[]
+  submissions     TaskSubmission[]
+  posts           Post[]
+  comments        Comment[]
+  likes           Like[]
+  reports         Report[]
+  jobApplications JobApplication[]
+  adminApplication LocalAdminApplication?
+}
+
+// ─── AREA + ORG ──────────────────────────────────
+
+model Area {
+  id            String         @id @default(cuid())
+  name          String
+  district      String
+  division      String
+  users         User[]
+  organizations Organization[]
+  tasks         Task[]
+  localAdminApplications LocalAdminApplication[]
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  areaId      String
+  adminId     String
+  bankBalance Float    @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  area             Area              @relation(fields: [areaId], references: [id])
+  memberships      OrgMembership[]
+  donationProjects DonationProject[]
+  tasks            Task[]
+}
+
+model OrgMembership {
+  id        String    @id @default(cuid())
+  userId    String
+  orgId     String
+  status    String    @default("PENDING")
+  nidNumber String
+  nidPhoto  String
+  joinedAt  DateTime?
+  createdAt DateTime  @default(now())
+
+  user User         @relation(fields: [userId], references: [id])
+  org  Organization @relation(fields: [orgId], references: [id])
+
+  @@unique([userId, orgId])
+}
+
+// ─── DONATION ────────────────────────────────────
+model DonationProject {
+  id              String    @id @default(cuid())
+  title           String
+  description     String
+  goalAmount      Float
+  collectedAmount Float     @default(0)
+  deadline        DateTime?
+  status          String    @default("active")
+  orgId           String
+  createdBy       String
+  createdAt       DateTime  @default(now())
+
+  org      Organization     @relation(fields: [orgId], references: [id])
+  donations Donation[]
+  expenses  ProjectExpense[]
+}
+
+model ProjectExpense {
+  id          String   @id @default(cuid())
+  projectId   String
+  description String
+  amount      Float
+  proofUrl    String?
+  createdAt   DateTime @default(now())
+
+  project DonationProject @relation(fields: [projectId], references: [id])
+}
+
+model Donation {
+  id         String   @id @default(cuid())
+  projectId  String
+  amount     Float
+  method     String
+  userId     String?
+  guestName  String?
+  guestPhone String?
+  guestEmail String?
+  paymentRef String?  @unique
+  createdAt  DateTime @default(now())
+
+  project   DonationProject @relation(fields: [projectId], references: [id])
+  user      User?           @relation(fields: [userId], references: [id])
+  auditLogs AuditLog[]
+}
+
+// ─── TASK ────────────────────────────────────────
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  date        DateTime @db.Date   // ← @db.Date যোগ করো
+  pointValue  Int      @default(10)
+  status      String   @default("OPEN")
+  areaId      String
+  orgId       String
+  createdBy   String
+  createdAt   DateTime @default(now())
+
+  area        Area             @relation(fields: [areaId], references: [id])
+  org         Organization     @relation(fields: [orgId], references: [id])
+  submissions TaskSubmission[]
+
+  @@unique([orgId, date])        // org-based — ঠিক আছে
+}
+
+model TaskSubmission {
+  id          String    @id @default(cuid())
+  taskId      String
+  userId      String
+  proofPhotos String[]
+  status      String    @default("PENDING")
+  reviewedBy  String?
+  reviewNote  String?
+  submittedAt DateTime  @default(now())
+  reviewedAt  DateTime?
+
+  task Task @relation(fields: [taskId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([taskId, userId])   // ← ADD: race condition block করবে
+}
+
+// ─── POINTS ──────────────────────────────────────
+model PointLedger {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int
+  reason    String
+  refId     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// ─── POSTS / PRESS ───────────────────────────────
+
+model Post {
+  id         String   @id @default(cuid())
+  userId     String
+  content    String?
+  photos     String[]
+  visibility PostVisibility @default(PUBLIC)
+  likeCount  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  // Phase 6 — এগুলো ADD করো:
+  isHidden   Boolean  @default(false)  // admin hide
+  isDeleted  Boolean  @default(false)  // soft delete — never hard delete
+  editedAt   DateTime?                 // কখন edit হয়েছে
+
+  user     User      @relation(fields: [userId], references: [id])
+  likes    Like[]
+  comments Comment[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String 
+  postId    String
+  content   String
+  parentId  String?
+  depth     Int      @default(0)
+  likeCount Int      @default(0)
+  isDeleted Boolean  @default(false)
+  editedAt  DateTime? 
+  createdAt DateTime @default(now())
+
+  user    User      @relation(fields: [userId], references: [id])
+  post    Post      @relation(fields: [postId], references: [id])
+  parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies Comment[] @relation("CommentReplies")
+  likes   Like[]    // ← ADD: comment likes
+
+}
+
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String?
+  commentId String?
+  createdAt DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id])
+  post    Post?    @relation(fields: [postId], references: [id])
+  comment Comment? @relation(fields: [commentId], references: [id])
+
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+}
+
+
+
+model Report {
+  id         String   @id @default(cuid())
+  reporterId String
+  targetId   String
+  targetType String   @default("POST")
+  reason     String
+  status     String   @default("PENDING")
+  reviewNote String?
+  reviewedBy String?
+  createdAt  DateTime @default(now())
+
+  reporter User @relation(fields: [reporterId], references: [id])
+
+  @@unique([reporterId, targetId])
+}
+
+// ─── CAREER ──────────────────────────────────────
+model JobPost {
+  id             String    @id @default(cuid())
+  title          String
+  department     String
+  location       String
+  jobType        String
+  description    String
+  requirements   String
+  experience     String?
+  applicationFee Float     @default(0)
+  status         String    @default("OPEN")
+  createdBy      String
+  createdAt      DateTime  @default(now())
+
+  deadline       DateTime? // ← ADD: application deadline
+
+  applications   JobApplication[]
+}
+
+model JobApplication {
+  id         String   @id @default(cuid())
+  jobId      String
+  userId     String
+  cvPath     String   // URL নয়, MinIO path — presigned URL generate করবে
+  paymentRef String?  @unique
+  feeStatus  String   @default("pending")
+  status     String   @default("PENDING")
+  reviewNote String?
+  createdAt  DateTime @default(now())
+
+  job  JobPost @relation(fields: [jobId], references: [id])
+  user User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, jobId]) // ← ADD: Fix 1 — double application block
+}
+
+// ─── SYSTEM ──────────────────────────────────────
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // String রাখো — enum করলে migration break হবে
+  message   String
+  refId     String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])   // ← ADD: getUnreadCount() fast হবে
+  @@index([userId, createdAt]) // ← ADD: paginated list fast হবে
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String
+  userId     String
+  metadata   Json?
+  donationId String?
+  createdAt  DateTime @default(now())
+
+  donation Donation? @relation(fields: [donationId], references: [id])
+}
+
+model LocalAdminApplication {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  areaId          String   // ← এই field থাকতে হবে!
+  orgName         String
+  memberCount     Int
+  bankProofUrl    String
+  memberListUrl   String?
+  isEmergency     Boolean  @default(false)
+  emergencyReason String?
+  emergencyProof  String?
+  status          String   @default("pending")
+  reviewedBy      String?
+  reviewNote      String?
+  reviewedAt      DateTime?
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  area Area @relation(fields: [areaId], references: [id]) // ← relation থাকতে হবে
+}
+
+model OtpVerification {
+  id        String   @id @default(cuid())
+  phone     String
+  otp       String
+  purpose   String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+   
