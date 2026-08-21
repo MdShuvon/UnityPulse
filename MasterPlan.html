@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>UnityPulse — Master Plan</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0f0f11;color:#e2e0db;min-height:100vh}
+header{padding:32px 40px 24px;border-bottom:1px solid #1e1e24}
+header h1{font-size:22px;font-weight:600;color:#fff;letter-spacing:-0.5px}
+header p{font-size:13px;color:#666;margin-top:4px}
+nav{display:flex;gap:0;border-bottom:1px solid #1e1e24;padding:0 40px;overflow-x:auto}
+.nav-btn{padding:14px 20px;font-size:13px;font-weight:500;color:#555;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
+.nav-btn:hover{color:#aaa}
+.nav-btn.active{color:#fff;border-bottom-color:#7f77dd}
+main{padding:32px 40px;max-width:960px}
+.panel{display:none}.panel.active{display:block}
+
+/* Phase cards */
+.phase{margin-bottom:28px}
+.phase-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:12px}
+.phase-num{min-width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.p0{background:#501313;color:#f09595}
+.p1{background:#412402;color:#EF9F27}
+.p2{background:#083530;color:#5DCAA5}
+.p3{background:#0c447c44;color:#85B7EB}
+.p4{background:#3c348944;color:#AFA9EC}
+.p5{background:#3b6d1144;color:#97C459}
+.p6{background:#85330044;color:#F0997B}
+.p7{background:#72243e44;color:#ED93B1}
+.p8{background:#44444144;color:#B4B2A9}
+.phase-meta{flex:1}
+.phase-title{font-size:15px;font-weight:600;color:#fff;margin-bottom:2px}
+.phase-sub{font-size:12px;color:#555}
+.steps{border:1px solid #1e1e24;border-radius:10px;overflow:hidden}
+.step{display:flex;align-items:flex-start;gap:12px;padding:11px 16px;border-bottom:1px solid #1e1e24;font-size:13px}
+.step:last-child{border:none}
+.step-icon{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:1px}
+.fix-risk{background:#50131322;border:1px solid #f0959544;color:#f09595}
+.fix-miss{background:#0c447c22;border:1px solid #85b7eb44;color:#85b7eb}
+.feature{background:#08353022;border:1px solid #5dcaa544;color:#5dcaa5}
+.step-text{color:#b0ae a8;line-height:1.5}
+.step-text strong{color:#e2e0db;font-weight:500}
+.tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
+.t-risk{background:#50131322;color:#f09595;border:1px solid #f0959530}
+.t-miss{background:#0c447c22;color:#85b7eb;border:1px solid #85b7eb30}
+.legend{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:6px;font-size:12px;color:#666}
+.leg-dot{width:10px;height:10px;border-radius:2px}
+
+/* OOP */
+.class-card{background:#141418;border:1px solid #1e1e24;border-radius:10px;margin-bottom:16px;overflow:hidden}
+.class-header{padding:14px 18px;border-bottom:1px solid #1e1e24;display:flex;align-items:center;gap:10px}
+.class-name{font-size:14px;font-weight:600;color:#fff;font-family:monospace}
+.class-desc{font-size:12px;color:#555;margin-left:auto}
+.method{padding:10px 18px;border-bottom:1px solid #13131700;display:flex;gap:12px;align-items:flex-start}
+.method:last-child{border:none}
+.method-sig{font-family:monospace;font-size:12px;color:#7f77dd;min-width:260px;flex-shrink:0}
+.method-desc{font-size:12px;color:#666;line-height:1.5}
+.dep{font-size:11px;color:#3b6d11;background:#17340422;border:1px solid #3b6d1130;padding:1px 7px;border-radius:4px;display:inline-block;margin-top:3px}
+
+/* Schema */
+.model{background:#141418;border:1px solid #1e1e24;border-radius:10px;margin-bottom:14px;overflow:hidden}
+.model-header{padding:11px 16px;background:#0a0a0e;border-bottom:1px solid #1e1e24;display:flex;align-items:center;gap:8px}
+.model-name{font-family:monospace;font-size:13px;font-weight:700;color:#7f77dd}
+.model-note{font-size:11px;color:#444;margin-left:auto}
+.field{display:grid;grid-template-columns:160px 140px 1fr;padding:7px 16px;border-bottom:1px solid #13131600;font-size:12px}
+.field:nth-child(even){background:#0d0d1100}
+/* .field:last-child{} */
+.f-name{font-family:monospace;color:#5DCAA5}
+.f-type{font-family:monospace;color:#EF9F27}
+.f-note{color:#444;font-style:italic}
+.risk-badge{font-size:10px;padding:1px 6px;border-radius:3px;background:#50131322;color:#f09595;border:1px solid #f0959530;margin-left:6px}
+
+/* Sequence fix callouts */
+.fix-callout{background:#50131315;border:1px solid #f0959530;border-radius:8px;padding:12px 16px;margin-top:8px;font-size:12px;color:#f09595;display:flex;gap:8px}
+.fix-callout::before{content:"↳ Risk fixed";font-weight:600;color:#f09595;white-space:nowrap}
+</style>
+</head>
+<body>
+<header>
+  <h1>UnityPulse 2.0 — Master Plan</h1>
+  <p>Risk-aware build sequence · OOP service design · Full Prisma schema</p>
+</header>
+<nav>
+  <div class="nav-btn active" onclick="show('seq',this)">Build Sequence</div>
+  <div class="nav-btn" onclick="show('oop',this)">OOP Design</div>
+  <div class="nav-btn" onclick="show('schema',this)">Full Schema</div>
+</nav>
+<main>
+
+<!-- ═══════════ SEQUENCE ═══════════ -->
+<div id="seq" class="panel active">
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:#f0959560"></div>Risk টা এখানে fix হচ্ছে</div>
+    <div class="leg"><div class="leg-dot" style="background:#85b7eb60"></div>Missing feature এখানে add হচ্ছে</div>
+    <div class="leg"><div class="leg-dot" style="background:#5dcaa560"></div>Core feature</div>
+  </div>
+
+  <!-- Phase 0 -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num p0">0</div>
+      <div class="phase-meta">
+        <div class="phase-title">Security Foundation — Day 1 (code এর আগে)</div>
+        <div class="phase-sub">কোনো feature নয়, শুধু security layer তৈরি — পরে সব এটার উপর দাঁড়াবে</div>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-icon fix-risk">R</div><div class="step-text"><strong>bcryptjs install + password hashing</strong> — এখন থেকে সব password hash হবে <span class="tag t-risk">risk: plain text password</span></div></div>
+      <div class="step"><div class="step-icon fix-risk">R</div><div class="step-text"><strong>FileService class</strong> — type check (PDF/JPG/PNG only), max 5MB, folder structure — NID/CV/photo সব upload এই service দিয়ে যাবে <span class="tag t-risk">risk: unvalidated uploads</span></div></div>
+      <div class="step"><div class="step-icon fix-risk">R</div><div class="step-text"><strong>AuditService class</strong> — immutable log, কেউ edit/delete করতে পারবে না <span class="tag t-risk">risk: no audit trail</span></div></div>
+      <div class="step"><div class="step-icon fix-miss">M</div><div class="step-text"><strong>NotificationService class</strong> — stub হিসেবে, পরে সব phase এ use হবে <span class="tag t-miss">missing: notifications</span></div></div>
+      <div class="step"><div class="step-icon fix-miss">M</div><div class="step-text"><strong>PointService class</strong> — stub হিসেবে, donation ও task দুটো type handle করবে <span class="tag t-miss">missing: scoring algorithm</span></div></div>
+      <div class="step"><div class="step-icon fix-risk">R</div><div class="step-text"><strong>Rate limiting (Redis) + CORS + Helmet</strong> — brute force, CSRF, clickjacking prevent <span class="tag t-risk">risk: no rate limit</span></div></div>
+    </div>
+  </div>
+
+  <!-- Phase 1 -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num p1">1</div>
+      <div class="phase-meta">
+        <div class="phase-title">Full Schema + Auth — Week 1</div>
+        <div class="phase-sub">সব Prisma models এক সাথে push — পরে migration conflict এড়াতে</div>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>schema.prisma — সব 15টা model এক সাথে লেখো</strong> — User, Area, Org, Donation, Task, Post, Comment, Career, Points, Audit, Notification, OTP, Report, LocalAdminApp, Like</div></div>
+      <div class="step"><div class="step-icon fix-miss">M</div><div class="step-text"><strong>OTP verification system</strong> — register এ phone OTP, 5 min expire, hashed store <span class="tag t-miss">missing: phone verification</span></div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Register → OTP → Verify → Profile create</strong> — step by step flow</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Login + session (Redis) + Logout</strong></div></div>
+      <div class="step"><div class="step-icon fix-miss">M</div><div class="step-text"><strong>Forgot password → OTP → Reset</strong> — hashed OTP, 10 min expire <span class="tag t-miss">missing: forgot password</span></div></div>
+      <div class="step"><div class="step-icon fix-risk">R</div><div class="step-text"><strong>Admin 2FA (TOTP — speakeasy)</strong> — super admin ও local admin login এ mandatory <span class="tag t-risk">risk: admin account takeover</span></div></div>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num p2">2</div>
+      <div class="phase-meta">
+        <div class="phase-title">Profile + Area + Organization — Week 2</div>
+        <div class="phase-sub">KYC এবং NID এখানে — FileService ও AuditService এর প্রথম real use</div>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Professional profile create</strong> — name, bio, photo, DOB, occupation, address — registration form এ full</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Public/private toggle per field</strong> — phone, DOB, address আলাদা আলাদা public/private করা যাবে</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Area select → Organization list → Join request</strong> — একটি মাত্র organization join করা যাবে</div></div>
+      <div class="step"><div class="step-icon fix-risk">R</div><div class="step-text"><strong>NID number AES-256 encrypt করে store</strong> — service layer এ, DB তে plain text যাবে না <span class="tag t-risk">risk: NID data exposure</span></div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>NID photo upload via FileService</strong> — validate type+size, MinIO তে store</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Admin KYC review</strong> — approve/reject, NotificationService.send() call হবে, AuditService.log() call হবে</div></div>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num p3">3</div>
+      <div class="phase-meta">
+        <div class="phase-title">Donation System — Week 3</div>
+        <div class="phase-sub">Guest donation, live feed, points, audit — সব এক সাথে</div>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>DonationProject CRUD</strong> — admin create, expense list, goal tracking</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Guest donation</strong> — name + phone + amount, login ছাড়া</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Member donation</strong> — linked account, auto PointService.add()</div></div>
+      <div class="step"><div class="step-icon fix-risk">R</div><div class="step-text"><strong>Idempotent payment check</strong> — same paymentRef দুইবার process হবে না <span class="tag t-risk">risk: double charge</span></div></div>
+      <div class="step"><div class="step-icon fix-miss">M</div><div class="step-text"><strong>AuditService.log() প্রতিটা donation এ</strong> — immutable financial record <span class="tag t-miss">missing: audit log</span></div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>SSE live feed</strong> — Redis pub/sub দিয়ে, concurrent connections handle হবে</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>NotificationService.send()</strong> — donation received notification to org admin</div></div>
+    </div>
+  </div>
+
+  <!-- Phase 4 -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num p4">4</div>
+      <div class="phase-meta">
+        <div class="phase-title">Task System — Week 4</div>
+        <div class="phase-sub">1 task/day rule, proof upload, cross-check approval, auto point</div>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Task create</strong> — local admin, @@unique([areaId, date]) দিয়ে 1 task/day enforce</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Area feed broadcast</strong> — task create হলেই SSE দিয়ে ওই area এর সবার feed এ যাবে</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Task submit with proof photos</strong> — FileService দিয়ে, max 5 photos</div></div>
+      <div class="step"><div class="step-icon fix-risk">R</div><div class="step-text"><strong>Admin নিজের area এর contested task approve করতে পারবে না</strong> — canApprove() check করবে TaskService <span class="tag t-risk">risk: point gaming</span></div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Approve → PointService.add() + NotificationService.send()</strong> — সব auto</div></div>
+    </div>
+  </div>
+
+  <!-- Phase 5 -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num p5">5</div>
+      <div class="phase-meta">
+        <div class="phase-title">Leaderboards × 3 — Week 5</div>
+        <div class="phase-sub">Donation, Task, Organization — তিনটা আলাদা, সব PointService থেকে</div>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Donation leaderboard</strong> — member এর donation amount sum, descending</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Task leaderboard</strong> — member এর approved task point sum, descending</div></div>
+      <div class="step"><div class="step-icon fix-miss">M</div><div class="step-text"><strong>Organization leaderboard scoring formula</strong> — donation×0.4 + task×0.3 + member×0.2 + active_days×0.1 <span class="tag t-miss">missing: org scoring algorithm</span></div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Badge system</strong> — leaderboard rank অনুযায়ী auto badge assign, profile এ show হবে</div></div>
+    </div>
+  </div>
+
+  <!-- Phase 6 -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num p6">6</div>
+      <div class="phase-meta">
+        <div class="phase-title">Press + Posts + Comments — Week 6</div>
+        <div class="phase-sub">Post থেকে Press, nested reply, moderation — সব এক phase এ</div>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Post create</strong> — photos via FileService, public post auto press page এ যাবে</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Like + Comment (max 3 level nested)</strong> — depth field দিয়ে enforce, performance safe</div></div>
+      <div class="step"><div class="step-icon fix-miss">M</div><div class="step-text"><strong>Report system</strong> — post/comment report করা যাবে, admin moderation queue এ যাবে <span class="tag t-miss">missing: content moderation</span></div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Admin moderation</strong> — N reports এ auto-hide, admin manually remove করতে পারবে</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Search by name → public profile</strong> — post author name click, comment author click</div></div>
+    </div>
+  </div>
+
+  <!-- Phase 7 -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num p7">7</div>
+      <div class="phase-meta">
+        <div class="phase-title">Career + Payment Gateway — Week 7</div>
+        <div class="phase-sub">bKash/Nagad integration, idempotent payment, refund policy</div>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Job post (super admin)</strong> — public visible, requirement সবাই দেখতে পাবে</div></div>
+      <div class="step"><div class="step-icon fix-miss">M</div><div class="step-text"><strong>bKash/Nagad payment gateway</strong> — subscription fee collect, sandbox test আগে <span class="tag t-miss">missing: payment gateway</span></div></div>
+      <div class="step"><div class="step-icon fix-risk">R</div><div class="step-text"><strong>Idempotent payment + refund policy</strong> — PaymentService.verify() double charge prevent <span class="tag t-risk">risk: payment fraud</span></div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>CV upload via FileService + application submit</strong></div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Admin review applications</strong> — accept/reject, NotificationService.send()</div></div>
+    </div>
+  </div>
+
+  <!-- Phase 8 -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num p8">8</div>
+      <div class="phase-meta">
+        <div class="phase-title">Dashboard + Local Admin App + Notifications — Week 8</div>
+        <div class="phase-sub">Home aggregation, central admin panel, local admin application flow</div>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Home dashboard</strong> — total projects, donors, orgs, 2 live transactions, press highlights, top tasks, career snippet</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Local admin application</strong> — 10 member proof, 50k BDT bank proof, org name</div></div>
+      <div class="step"><div class="step-icon fix-risk">R</div><div class="step-text"><strong>Emergency tag → super admin manual review mandatory</strong> — proof document required, no auto bypass <span class="tag t-risk">risk: emergency tag abuse</span></div></div>
+      <div class="step"><div class="step-icon fix-miss">M</div><div class="step-text"><strong>Notification bell UI</strong> — in-app, real-time unread count, mark all read <span class="tag t-miss">missing: notification system complete</span></div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Central admin panel</strong> — super admin দেখবে local admin দের activity, reports নেবে</div></div>
+    </div>
+  </div>
+
+  <!-- Phase 9 -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num p8">9</div>
+      <div class="phase-meta">
+        <div class="phase-title">Mobile + Final Hardening — Week 9–10</div>
+        <div class="phase-sub">Capacitor Android, HTTPS, final security audit</div>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Capacitor Android build</strong> — SvelteKit → APK/AAB</div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Caddy reverse proxy + auto HTTPS</strong></div></div>
+      <div class="step"><div class="step-icon feature">F</div><div class="step-text"><strong>Final security audit</strong> — penetration test, NGOAB compliance check, DSA 2018 review</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ OOP ═══════════ -->
+<div id="oop" class="panel">
+
+  <div class="class-card">
+    <div class="class-header"><span class="class-name">UserService</span><span class="class-desc">সব user logic এখানে</span></div>
+    <div class="method"><div class="method-sig">register(data)</div><div class="method-desc">password hash করে, OTP generate করে, User create করে। Route শুধু এই method call করবে।</div></div>
+    <div class="method"><div class="method-sig">verifyOTP(phone, otp)</div><div class="method-desc">OtpVerification table check, expire check, used=true set</div></div>
+    <div class="method"><div class="method-sig">login(email, pass)</div><div class="method-desc">bcrypt.compare(), session create (Redis), admin হলে 2FA check</div></div>
+    <div class="method"><div class="method-sig">forgotPassword(phone)</div><div class="method-desc">OTP generate, hashed store, 10 min expire</div></div>
+    <div class="method"><div class="method-sig">resetPassword(phone, otp, newPass)</div><div class="method-desc">OTP verify, hash newPass, update, old session invalidate</div></div>
+    <div class="method"><div class="method-sig">getPublicProfile(userId)</div><div class="method-desc">privacySettings check করে শুধু public fields return করে</div></div>
+    <div class="method"><div class="method-sig">togglePrivacy(userId, field, bool)</div><div class="method-desc">privacySettings JSON update — field level control</div></div>
+  </div>
+
+  <div class="class-card">
+    <div class="class-header"><span class="class-name">FileService</span><span class="class-desc">সব file operation এক জায়গায় — Phase 0 এ তৈরি</span></div>
+    <div class="method"><div class="method-sig">validate(file, opts)</div><div class="method-desc">allowedTypes: ['image/jpeg','image/png','application/pdf'], maxMB check। Invalid হলে throw করে — route এ পৌঁছায় না।</div></div>
+    <div class="method"><div class="method-sig">upload(file, folder)</div><div class="method-desc">MinIO তে save করে unique filename দিয়ে, path return করে। folder: 'nid' | 'cv' | 'proof' | 'post'</div></div>
+    <div class="method"><div class="method-sig">delete(path)</div><div class="method-desc">MinIO থেকে file delete। User account delete এ সব file clean করে।</div></div>
+  </div>
+
+  <div class="class-card">
+    <div class="class-header"><span class="class-name">DonationService</span><span class="class-desc">Project + donation + live feed</span></div>
+    <div class="method"><div class="method-sig">createProject(adminId, data)</div><div class="method-desc">DonationProject create, AuditService.log() call</div></div>
+    <div class="method"><div class="method-sig">donate(data)</div><div class="method-desc">PaymentService.verify() → Donation create → collectedAmount update → PointService.add() (member হলে) → AuditService.log() → NotificationService.send() → Redis publish (live feed)</div></div>
+    <div class="method"><div class="method-sig">getProgress(projectId)</div><div class="method-desc">collected, goal, remaining, donor count, expense list</div></div>
+    <div class="method"><div class="method-sig">getLiveFeed()</div><div class="method-desc">Redis subscribe, SSE stream। Client disconnect এ unsubscribe।</div></div>
+  </div>
+
+  <div class="class-card">
+    <div class="class-header"><span class="class-name">TaskService</span><span class="class-desc">Task create → submit → approve → point</span></div>
+    <div class="method"><div class="method-sig">createTask(adminId, data)</div><div class="method-desc">@@unique([areaId, date]) — already exists হলে error throw। Create হলে SSE দিয়ে area feed এ broadcast।</div></div>
+    <div class="method"><div class="method-sig">submitProof(userId, taskId, files)</div><div class="method-desc">FileService.validate() + FileService.upload() each file। TaskSubmission create, status=PENDING।</div></div>
+    <div class="method"><div class="method-sig">canApprove(adminId, submissionId)</div><div class="method-desc">Admin নিজের org এর member এর submission approve করতে পারবে না — cross-check। false হলে route 403 দেবে।</div></div>
+    <div class="method"><div class="method-sig">approve(adminId, submissionId)</div><div class="method-desc">canApprove() check → status=APPROVED → PointService.add() → NotificationService.send()</div></div>
+  </div>
+
+  <div class="class-card">
+    <div class="class-header"><span class="class-name">PointService</span><span class="class-desc">একটাই class — donation ও task দুটো reason handle করে</span></div>
+    <div class="method"><div class="method-sig">add(userId, amount, reason, refId)</div><div class="method-desc">reason: 'DONATION' | 'TASK'. PointLedger এ insert। Routes কখনো সরাসরি PointLedger তে write করবে না।</div></div>
+    <div class="method"><div class="method-sig">getTotal(userId, reason?)</div><div class="method-desc">reason দিলে filtered total, না দিলে overall total</div></div>
+    <div class="method"><div class="method-sig">getDonationLeaderboard(limit)</div><div class="method-desc">reason='DONATION' group by userId, sum, order desc</div></div>
+    <div class="method"><div class="method-sig">getTaskLeaderboard(limit)</div><div class="method-desc">reason='TASK' group by userId, sum, order desc</div></div>
+    <div class="method"><div class="method-sig">getOrgScore(orgId)</div><div class="method-desc">donation×0.4 + task×0.3 + memberCount×0.2 + activeDays×0.1 — weighted score for org leaderboard</div></div>
+  </div>
+
+  <div class="class-card">
+    <div class="class-header"><span class="class-name">NotificationService</span><span class="class-desc">Phase 0 থেকে stub — Phase 3+ এ real use</span></div>
+    <div class="method"><div class="method-sig">send(userId, type, message, refId?)</div><div class="method-desc">Notification table এ insert। Future এ এখানে SMS code যোগ হবে — বাকি সব same থাকবে।</div></div>
+    <div class="method"><div class="method-sig">getUnread(userId)</div><div class="method-desc">isRead=false filter করে return</div></div>
+    <div class="method"><div class="method-sig">markRead(userId, notifId?)</div><div class="method-desc">notifId দিলে single, না দিলে সব mark read</div></div>
+  </div>
+
+  <div class="class-card">
+    <div class="class-header"><span class="class-name">AuditService</span><span class="class-desc">Immutable — কেউ edit/delete করতে পারবে না</span></div>
+    <div class="method"><div class="method-sig">log(action, entity, entityId, userId, meta?)</div><div class="method-desc">AuditLog insert করে। No update, no delete method এ class এ নেই। NGOAB financial compliance এর জন্য।</div></div>
+    <div class="method"><div class="method-sig">getByEntity(entityType, entityId)</div><div class="method-desc">Admin read only। Super admin এর central panel এ দেখাবে।</div></div>
+  </div>
+
+  <div class="class-card">
+    <div class="class-header"><span class="class-name">PostService</span><span class="class-desc">Press, post, comment, moderation</span></div>
+    <div class="method"><div class="method-sig">create(userId, content, files)</div><div class="method-desc">FileService.upload() each photo। visibility=PUBLIC হলে Press page এ show।</div></div>
+    <div class="method"><div class="method-sig">comment(userId, postId, content, parentId?)</div><div class="method-desc">parentId থাকলে parent এর depth fetch করে, depth+1 set। depth > 2 হলে throw (max 3 level)।</div></div>
+    <div class="method"><div class="method-sig">report(userId, postId, reason)</div><div class="method-desc">Report create। 5+ reports হলে auto-hide post।</div></div>
+    <div class="method"><div class="method-sig">moderate(adminId, reportId, action)</div><div class="method-desc">action: 'hide' | 'remove' | 'dismiss'. AuditService.log() call।</div></div>
+  </div>
+
+  <div class="class-card">
+    <div class="class-header"><span class="class-name">PaymentService</span><span class="class-desc">bKash/Nagad — career fee ও future donation gateway</span></div>
+    <div class="method"><div class="method-sig">initiate(userId, amount, purpose, refId)</div><div class="method-desc">bKash/Nagad API call। paymentRef return করে।</div></div>
+    <div class="method"><div class="method-sig">verify(paymentRef)</div><div class="method-desc">Idempotent — same ref দুইবার process হবে না। DB তে check করে।</div></div>
+    <div class="method"><div class="method-sig">refund(paymentRef)</div><div class="method-desc">Gateway refund API call। AuditService.log() call। Status update।</div></div>
+  </div>
+
+  <div class="class-card">
+    <div class="class-header"><span class="class-name">OOP Rule — Routes are THIN</span><span class="class-desc">সবচেয়ে গুরুত্বপূর্ণ নিয়ম</span></div>
+    <div class="method"><div class="method-sig">✓ Route করবে:</div><div class="method-desc">Request validate (Zod) → Service method call → Response send। ব্যস।</div></div>
+    <div class="method"><div class="method-sig">✗ Route করবে না:</div><div class="method-desc">Prisma query সরাসরি, business logic, file upload handle, notification trigger — এগুলো সব Service এ।</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ SCHEMA ═══════════ -->
+<div id="schema" class="panel">
+
+  <div class="model">
+    <div class="model-header"><span class="model-name">User</span><span class="model-note">Core — সবকিছুর কেন্দ্র</span></div>
+    <div class="field"><span class="f-name">id</span><span class="f-type">String @cuid</span><span class="f-note">primary key</span></div>
+    <div class="field"><span class="f-name">name</span><span class="f-type">String</span><span class="f-note"></span></div>
+    <div class="field"><span class="f-name">email</span><span class="f-type">String @unique</span><span class="f-note"></span></div>
+    <div class="field"><span class="f-name">phone</span><span class="f-type">String @unique</span><span class="f-note">OTP verify এ use হয়</span></div>
+    <div class="field"><span class="f-name">password</span><span class="f-type">String</span><span class="f-note">bcrypt hashed — never plain <span class="risk-badge">risk fixed</span></span></div>
+    <div class="field"><span class="f-name">role</span><span class="f-type">Role enum</span><span class="f-note">SUPER_ADMIN | LOCAL_ADMIN | MEMBER</span></div>
+    <div class="field"><span class="f-name">isVerified</span><span class="f-type">Boolean</span><span class="f-note">OTP verify এর পর true <span class="risk-badge">risk fixed</span></span></div>
+    <div class="field"><span class="f-name">twoFASecret</span><span class="f-type">String?</span><span class="f-note">Admin 2FA TOTP secret <span class="risk-badge">risk fixed</span></span></div>
+    <div class="field"><span class="f-name">bio, photo, dob, occupation, address</span><span class="f-type">String? / DateTime?</span><span class="f-note">profile fields</span></div>
+    <div class="field"><span class="f-name">privacySettings</span><span class="f-type">Json?</span><span class="f-note">{ phone: false, dob: true } — per field control</span></div>
+    <div class="field"><span class="f-name">areaId</span><span class="f-type">String?</span><span class="f-note">→ Area</span></div>
+  </div>
+
+  <div class="model">
+    <div class="model-header"><span class="model-name">OtpVerification</span><span class="model-note">Phone verify + forgot password</span></div>
+    <div class="field"><span class="f-name">phone</span><span class="f-type">String</span><span class="f-note"></span></div>
+    <div class="field"><span class="f-name">otp</span><span class="f-type">String</span><span class="f-note">hashed store — plain text নয় <span class="risk-badge">risk fixed</span></span></div>
+    <div class="field"><span class="f-name">purpose</span><span class="f-type">String</span><span class="f-note">'register' | 'reset' | '2fa'</span></div>
+    <div class="field"><span class="f-name">expiresAt</span><span class="f-type">DateTime</span><span class="f-note">5 min for register, 10 min for reset</span></div>
+    <div class="field"><span class="f-name">used</span><span class="f-type">Boolean</span><span class="f-note">একবার use হলে invalid</span></div>
+  </div>
+
+  <div class="model">
+    <div class="model-header"><span class="model-name">Area + Organization</span><span class="model-note">Geography + Org structure</span></div>
+    <div class="field"><span class="f-name">Area.name, district, division</span><span class="f-type">String</span><span class="f-note"></span></div>
+    <div class="field"><span class="f-name">Organization.areaId</span><span class="f-type">String</span><span class="f-note">→ Area</span></div>
+    <div class="field"><span class="f-name">Organization.adminId</span><span class="f-type">String</span><span class="f-note">local admin userId</span></div>
+    <div class="field"><span class="f-name">Organization.bankBalance</span><span class="f-type">Float</span><span class="f-note">org leaderboard score এ use হয়</span></div>
+  </div>
+
+  <div class="model">
+    <div class="model-header"><span class="model-name">OrgMembership</span><span class="model-note">KYC — একজন শুধু একটি org</span></div>
+    <div class="field"><span class="f-name">userId + orgId</span><span class="f-type">@@unique</span><span class="f-note">একটি মাত্র org join করা যাবে enforce</span></div>
+    <div class="field"><span class="f-name">nidNumber</span><span class="f-type">String</span><span class="f-note">AES-256 encrypted in service <span class="risk-badge">risk fixed</span></span></div>
+    <div class="field"><span class="f-name">nidPhoto</span><span class="f-type">String</span><span class="f-note">MinIO path — FileService দিয়ে validated</span></div>
+    <div class="field"><span class="f-name">status</span><span class="f-type">KycStatus</span><span class="f-note">PENDING | APPROVED | REJECTED</span></div>
+  </div>
+
+  <div class="model">
+    <div class="model-header"><span class="model-name">DonationProject + Donation</span><span class="model-note">Guest ও Member donation support</span></div>
+    <div class="field"><span class="f-name">DonationProject.goalAmount, collectedAmount</span><span class="f-type">Float</span><span class="f-note">donate() এ auto update</span></div>
+    <div class="field"><span class="f-name">Donation.userId</span><span class="f-type">String?</span><span class="f-note">null = guest donation</span></div>
+    <div class="field"><span class="f-name">Donation.guestName, guestPhone</span><span class="f-type">String?</span><span class="f-note">login ছাড়া donate</span></div>
+    <div class="field"><span class="f-name">Donation.paymentRef</span><span class="f-type">String? @unique</span><span class="f-note">idempotent — double charge prevent <span class="risk-badge">risk fixed</span></span></div>
+    <div class="field"><span class="f-name">ProjectExpense.amount, proof</span><span class="f-type">Float, String?</span><span class="f-note">transparency list</span></div>
+  </div>
+
+  <div class="model">
+    <div class="model-header"><span class="model-name">Task + TaskSubmission</span><span class="model-note">1 task/day enforce + proof upload</span></div>
+    <div class="field"><span class="f-name">Task.date</span><span class="f-type">DateTime @db.Date</span><span class="f-note"></span></div>
+    <div class="field"><span class="f-name">@@unique([areaId, date])</span><span class="f-type">constraint</span><span class="f-note">1 task per area per day — DB level enforce</span></div>
+    <div class="field"><span class="f-name">TaskSubmission.proofPhotos</span><span class="f-type">String[]</span><span class="f-note">MinIO paths array</span></div>
+    <div class="field"><span class="f-name">TaskSubmission.reviewedBy</span><span class="f-type">String?</span><span class="f-note">canApprove() check এ use হয় <span class="risk-badge">risk fixed</span></span></div>
+  </div>
+
+  <div class="model">
+    <div class="model-header"><span class="model-name">PointLedger</span><span class="model-note">Donation ও Task দুটো reason — একই table</span></div>
+    <div class="field"><span class="f-name">reason</span><span class="f-type">String</span><span class="f-note">'DONATION' | 'TASK' — filter করে leaderboard বানায়</span></div>
+    <div class="field"><span class="f-name">refId</span><span class="f-type">String</span><span class="f-note">donationId বা submissionId — traceability</span></div>
+    <div class="field"><span class="f-name">amount</span><span class="f-type">Int</span><span class="f-note">donation amount বা task pointValue</span></div>
+  </div>
+
+  <div class="model">
+    <div class="model-header"><span class="model-name">Post + Comment + Like + Report</span><span class="model-note">Press, nested reply, moderation</span></div>
+    <div class="field"><span class="f-name">Post.visibility</span><span class="f-type">PostVisibility</span><span class="f-note">PUBLIC → Press page, PRIVATE → শুধু owner</span></div>
+    <div class="field"><span class="f-name">Comment.parentId</span><span class="f-type">String?</span><span class="f-note">null = top level reply</span></div>
+    <div class="field"><span class="f-name">Comment.depth</span><span class="f-type">Int @default(0)</span><span class="f-note">max 2 — service layer enforce করে <span class="risk-badge">risk fixed</span></span></div>
+    <div class="field"><span class="f-name">Report.status</span><span class="f-type">String</span><span class="f-note">'pending' | 'reviewed' | 'dismissed'</span></div>
+  </div>
+
+  <div class="model">
+    <div class="model-header"><span class="model-name">JobPost + JobApplication</span><span class="model-note">Career — fee + CV + idempotent</span></div>
+    <div class="field"><span class="f-name">JobPost.applicationFee</span><span class="f-type">Float</span><span class="f-note">0 হলে free, >0 হলে payment required</span></div>
+    <div class="field"><span class="f-name">JobApplication.cvUrl</span><span class="f-type">String</span><span class="f-note">MinIO path — FileService validated</span></div>
+    <div class="field"><span class="f-name">JobApplication.paymentRef</span><span class="f-type">String? @unique</span><span class="f-note">idempotent payment <span class="risk-badge">risk fixed</span></span></div>
+    <div class="field"><span class="f-name">JobApplication.feeStatus</span><span class="f-type">String</span><span class="f-note">'pending' | 'paid' | 'refunded'</span></div>
+  </div>
+
+  <div class="model">
+    <div class="model-header"><span class="model-name">AuditLog</span><span class="model-note">Immutable — no update/delete</span></div>
+    <div class="field"><span class="f-name">action</span><span class="f-type">AuditAction enum</span><span class="f-note">DONATION_CREATED | ADMIN_APPROVE_TASK | PAYMENT_VERIFIED...</span></div>
+    <div class="field"><span class="f-name">metadata</span><span class="f-type">Json?</span><span class="f-note">extra info — amount, before/after values</span></div>
+    <div class="field"><span class="f-name">updatedAt</span><span class="f-type">— none —</span><span class="f-note">intentionally missing — immutable record <span class="risk-badge">risk fixed</span></span></div>
+  </div>
+
+  <div class="model">
+    <div class="model-header"><span class="model-name">LocalAdminApplication</span><span class="model-note">Emergency tag — mandatory proof</span></div>
+    <div class="field"><span class="f-name">memberCount</span><span class="f-type">Int</span><span class="f-note">minimum 10 required — service layer check</span></div>
+    <div class="field"><span class="f-name">bankProofUrl</span><span class="f-type">String</span><span class="f-note">50k BDT proof document</span></div>
+    <div class="field"><span class="f-name">isEmergency</span><span class="f-type">Boolean</span><span class="f-note"></span></div>
+    <div class="field"><span class="f-name">emergencyProof</span><span class="f-type">String?</span><span class="f-note">emergency হলে proof mandatory — no bypass <span class="risk-badge">risk fixed</span></span></div>
+    <div class="field"><span class="f-name">userId @unique</span><span class="f-type">String</span><span class="f-note">একজন একবারই apply করতে পারবে</span></div>
+  </div>
+
+  <div class="model">
+    <div class="model-header"><span class="model-name">Notification</span><span class="model-note">In-app — Phase 3 থেকে real use</span></div>
+    <div class="field"><span class="f-name">type</span><span class="f-type">NotificationType enum</span><span class="f-note">TASK_APPROVED | DONATION_RECEIVED | KYC_APPROVED...</span></div>
+    <div class="field"><span class="f-name">isRead</span><span class="f-type">Boolean @default(false)</span><span class="f-note"></span></div>
+    <div class="field"><span class="f-name">refId</span><span class="f-type">String?</span><span class="f-note">related entity — click করলে সেখানে navigate করবে</span></div>
+  </div>
+
+</div>
+</main>
+
+<script>
+function show(id, el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
