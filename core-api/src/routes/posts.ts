@@ -15,11 +15,11 @@ app.post('/posts', { preHandler: requireAuth }, async (req, reply) => {
   const contentType = req.headers['content-type'] || '';
 
   if (contentType.includes('multipart/form-data')) {
-    // Multipart with photos
     const bufferedFiles: any[] = [];
     let bodyData: any = {};
 
     for await (const part of req.parts()) {
+      console.log('Part:', part.type, part.fieldname);
       if (part.type === 'file' && part.fieldname === 'photos') {
         if (bufferedFiles.length >= 5) { for await (const _ of part.file) {} continue; }
         const chunks: Buffer[] = [];

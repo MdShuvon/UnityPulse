@@ -3,121 +3,156 @@ import { prisma } from '../lib/prisma';
 const MODE = process.env.PAYMENT_MODE || 'mock';
 
 export interface PaymentVerifyResult {
-  verified:  boolean;
-  amount:    number;
-  currency:  string;
-  trxId:     string;
-  message?:  string;
+  verified: boolean;
+  amount: number;
+  trxId: string;
+  message?: string;
 }
 
 export class PaymentService {
 
-  // ── VERIFY PAYMENT ────────────────────────────────────────────────────
-  // Fix 2: Amount validate করো — fee mismatch block করো
-  async verify(
-    paymentRef:     string,
-    expectedAmount: number
-  ): Promise<PaymentVerifyResult>{
-
-    // Fix 2: Idempotent check — same ref already used in any application?
-    const alreadyUsed = await prisma.jobApplication.findFirst({
-      where: { paymentRef, feeStatus: 'paid' },
-    });
-    if (alreadyUsed) {
-      return { verified: false, amount: 0, currency: 'BDT', trxId: paymentRef,
-               message: 'এই payment ref ইতিমধ্যে use হয়েছে' };
-    }
+  // ── INITIATE PAYMENT ──────────────────────────────
+  async initiatePayment(applicationId: string, amount: number) {
+    const amountInPaisa = Math.round(amount * 100);
 
     if (MODE === 'mock') {
-      return this.verifyMock(paymentRef, expectedAmount);
+      const payment = await prisma.payment.create({
+        data: {
+          applicationId,
+          amount: amountInPaisa,
+          status: 'INITIATED',
+          method: 'mock',
+        },
+      });
+
+      return {
+        paymentId: payment.id,
+        gatewayUrl: `http://localhost:5173/career/payment/mock?paymentId=${payment.id}&amount=${amount}`,
+        amount: amountInPaisa,
+      };
     }
 
-    return this.verifyBkash(paymentRef, expectedAmount);
+    // SSLCommerz Production
+    const SSLCommerz = require('sslcommerz-lts');
+    
+    const sslcommerz = new SSLCommerz(
+      process.env.SSLCOMMERZ_STORE_ID,
+      process.env.SSLCOMMERZ_STORE_PASSWORD,
+      process.env.SSLCOMMERZ_SANDBOX === 'true'
+    );
+
+    const transactionId = `TXN-${Date.now()}`;
+
+    const paymentData = {
+      total_amount: amount,
+      currency: 'BDT',
+      tran_id: transactionId,
+      success_url: `http://localhost:3001/career/payment/success?applicationId=${applicationId}`,
+      fail_url: `http://localhost:3001/career/payment/fail?applicationId=${applicationId}`,
+      cancel_url: `http://localhost:3001/career/payment/cancel?applicationId=${applicationId}`,
+      ipn_url: 'http://localhost:3001/career/payment/ipn',
+      product_name: 'Job Application Fee',
+      product_category: 'Application',
+      product_profile: 'general',
+      cus_name: 'Customer',
+      cus_email: 'customer@example.com',
+      cus_phone: '01700000000',
+    };
+
+    try {
+      const response = await sslcommerz.init(paymentData);
+      
+      if (response?.GatewayPageURL) {
+        // Save payment record
+        const payment = await prisma.payment.create({
+          data: {
+            applicationId,
+            amount: amountInPaisa,
+            status: 'INITIATED',
+            method: 'sslcommerz',
+            gatewayTrxId: transactionId,
+          },
+        });
+
+        return {
+          paymentId: payment.id,
+          gatewayUrl: response.GatewayPageURL,
+          amount: amountInPaisa,
+        };
+      }
+      
+      throw new Error('SSLCommerz initiation failed');
+    } catch (err) {
+      console.error('SSLCommerz init error:', err);
+      throw new Error('Payment initiation failed');
+    }
   }
 
-  // ── MOCK MODE (Development) ───────────────────────────────────────────
-  // যেকোনো trxId accept করে — development এ আটকায় না
-  private verifyMock(trxId: string, expectedAmount: number): PaymentVerifyResult {
-    console.log(`[MOCK PAYMENT] trxId: ${trxId}, amount: ${expectedAmount}`);
+  // ── VERIFY PAYMENT (IPN / Webhook) ────────────────
+  async verifyPayment(paymentId: string, gatewayTrxId: string) {
+    const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+    if (!payment) throw new Error('Payment পাওয়া যায়নি');
+
+    if (MODE === 'mock') {
+      // Mock verify — সব success
+      await prisma.payment.update({
+        where: { id: paymentId },
+        data: {
+          status: 'SUCCESS',
+          gatewayTrxId,
+          verifiedAt: new Date(),
+        },
+      });
+
+      // // Application status update
+      // if (payment.applicationId) {
+      //   await prisma.jobApplication.update({
+      //     where: { id: payment.applicationId },
+      //     data: { status: 'SUBMITTED', feeStatus: 'paid' },
+      //   });
+      // }
+
+     // Application status update - keep PENDING for admin review
+       if (payment.applicationId) {
+        await prisma.jobApplication.update({
+          where: { id: payment.applicationId },
+          data: { status: 'SUBMITTED', feeStatus: 'VERIFIED' },
+        });
+      }
+
+      return { verified: true, message: 'Payment verified' };
+    }
+
+    // SSLCommerz validation API call
+    return { verified: false, message: 'Not implemented' };
+  }
+    // ── VERIFY (Legacy method for career service) ────
+  async verify(paymentRef: string, expectedAmount: number): Promise<PaymentVerifyResult> {
+    if (MODE === 'mock') {
+      return {
+        verified: true,
+        amount: expectedAmount,
+        trxId: paymentRef,
+        message: 'Mock verified',
+      };
+    }
+    
+    // Production: SSLCommerz verify
     return {
-      verified: true,
-      amount:   expectedAmount,
-      currency: 'BDT',
-      trxId,
-      message:  'Mock payment verified (development mode)',
+      verified: false,
+      amount: 0,
+      trxId: paymentRef,
+      message: 'Not implemented',
     };
   }
-
-  // ── bKash VERIFY (Production) ─────────────────────────────────────────
-  private async verifyBkash(
-    trxId:          string,
-    expectedAmount: number
-  ): Promise<PaymentVerifyResult> {
-    try {
-      // Step 1: bKash token নাও
-      const tokenRes = await fetch(
-        `${process.env.BKASH_BASE_URL}/tokenized/checkout/token/grant`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type':  'application/json',
-            'username':      process.env.BKASH_USERNAME!,
-            'password':      process.env.BKASH_PASSWORD!,
-          },
-          body: JSON.stringify({
-            app_key:    process.env.BKASH_APP_KEY,
-            app_secret: process.env.BKASH_APP_SECRET,
-          }),
-        }
-      );
-      const tokenData = await tokenRes.json() as any;
-      if (!tokenData.id_token) throw new Error('bKash token নেওয়া যায়নি');
-
-      // Step 2: Transaction query করো
-      const queryRes = await fetch(
-        `${process.env.BKASH_BASE_URL}/tokenized/checkout/general/searchTransaction`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type':  'application/json',
-            'Authorization': tokenData.id_token,
-            'X-APP-Key':     process.env.BKASH_APP_KEY!,
-          },
-          body: JSON.stringify({ trxID: trxId }),
-        }
-      );
-      const data = await queryRes.json() as any;
-
-      if (data.statusCode !== '0000') {
-        return { verified: false, amount: 0, currency: 'BDT', trxId,
-                 message: 'Transaction পাওয়া যায়নি বা invalid' };
-      }
-
-      const actualAmount = parseFloat(data.amount || '0');
-
-      // Fix 2: Amount validate করো
-      if (actualAmount < expectedAmount) {
-        return { verified: false, amount: actualAmount, currency: 'BDT', trxId,
-                 message: `Payment কম — expected: ${expectedAmount}, got: ${actualAmount}` };
-      }
-
-      return { verified: true, amount: actualAmount, currency: 'BDT', trxId };
-
-    } catch (err) {
-      console.error('bKash verify error:', err);
-      return { verified: false, amount: 0, currency: 'BDT', trxId,
-               message: 'Payment verify করতে সমস্যা হয়েছে' };
-    }
-  }
-
-  // ── MARK REFUND PENDING ───────────────────────────────────────────────
-  // Fix 3: CV upload fail হলে call করো
-  async markRefundPending(applicationId: string, reason: string) {
-    await prisma.jobApplication.update({
-      where: { id: applicationId },
-      data:  { feeStatus: 'refund_pending' },
-    });
-    console.warn(`Refund pending: applicationId=${applicationId}, reason=${reason}`);
+  // ── CHECK PAYMENT STATUS ─────────────────────────
+  async getPaymentStatus(paymentId: string) {
+    const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+    if (!payment) throw new Error('Payment পাওয়া যায়নি');
+    return {
+      status: payment.status,
+      verified: payment.status === 'SUCCESS',
+    };
   }
 }
 

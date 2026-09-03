@@ -1,13 +1,13 @@
-<!-- src/routes/register/+page.svelte -->
+﻿<!-- src/routes/register/+page.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { Eye, EyeOff, Loader2, Leaf, AlertCircle, CheckCircle2, XCircle, Shield, ShieldCheck, ShieldAlert } from 'lucide-svelte';
   
-  // ─── Import Google Fonts ────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Import Google Fonts Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // Add this to your app.html head or we'll load it here
   
-  // ─── State Management ──────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ State Management Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   let fullName = $state('');
   let phone = $state('');
   let email = $state('');
@@ -19,13 +19,13 @@
   let isLoading = $state(false);
   let isCheckingAuth = $state(true);
   
-  // ─── Toast/Modal Notification ──────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Toast/Modal Notification Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   let showModal = $state(false);
   let modalMessage = $state('');
   let modalType = $state<'success' | 'error'>('success');
   let modalTitle = $state('');
   
-  // ─── Form Errors ───────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Form Errors Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   interface FieldErrors {
     fullName?: string;
     phone?: string;
@@ -43,7 +43,7 @@
     confirmPassword: false
   });
   
-  // ─── Password Strength ─────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Password Strength Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   interface PasswordChecks {
     minLength: boolean;
     hasUpperCase: boolean;
@@ -62,13 +62,13 @@
   
   let passwordStrength = $derived.by(() => {
     const score = Object.values(passwordChecks).filter(Boolean).length;
-    if (score <= 1) return { label: 'দুর্বল', color: '#e74c3c', percent: 20 };
-    if (score <= 3) return { label: 'মাঝারি', color: '#f39c12', percent: 50 };
-    if (score <= 4) return { label: 'ভালো', color: '#3498db', percent: 75 };
-    return { label: 'শক্তিশালী', color: '#2ecc71', percent: 100 };
+    if (score <= 1) return { label: 'Ã Â¦Â¦Ã Â§ÂÃ Â¦Â°Ã Â§ÂÃ Â¦Â¬Ã Â¦Â²', color: '#e74c3c', percent: 20 };
+    if (score <= 3) return { label: 'Ã Â¦Â®Ã Â¦Â¾Ã Â¦ÂÃ Â¦Â¾Ã Â¦Â°Ã Â¦Â¿', color: '#f39c12', percent: 50 };
+    if (score <= 4) return { label: 'Ã Â¦Â­Ã Â¦Â¾Ã Â¦Â²Ã Â§â€¹', color: '#3498db', percent: 75 };
+    return { label: 'Ã Â¦Â¶Ã Â¦â€¢Ã Â§ÂÃ Â¦Â¤Ã Â¦Â¿Ã Â¦Â¶Ã Â¦Â¾Ã Â¦Â²Ã Â§â‚¬', color: '#2ecc71', percent: 100 };
   });
   
-  // ─── Show Modal ────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Show Modal Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   function showModalMessage(title: string, message: string, type: 'success' | 'error') {
     modalTitle = title;
     modalMessage = message;
@@ -76,7 +76,7 @@
     showModal = true;
   }
   
-  // ─── Check Auth on Mount ───────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Check Auth on Mount Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   onMount(async () => {
     try {
       const response = await fetch('http://localhost:3001/auth/me', {
@@ -98,7 +98,7 @@
     }
   });
   
-  // ─── Phone Formatting ──────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Phone Formatting Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   function formatPhone(value: string): string {
     let digits = value.replace(/\D/g, '');
     if (digits.length > 0 && !digits.startsWith('01')) {
@@ -111,36 +111,36 @@
     return digits;
   }
   
-  // ─── Field Validation ──────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Field Validation Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   function validateFullName(value: string): string | undefined {
-    if (!value.trim()) return 'পূর্ণ নাম দিন';
-    if (value.trim().length < 2) return 'নাম কমপক্ষে ২ অক্ষর হতে হবে';
+    if (!value.trim()) return 'Ã Â¦ÂªÃ Â§â€šÃ Â¦Â°Ã Â§ÂÃ Â¦Â£ Ã Â¦Â¨Ã Â¦Â¾Ã Â¦Â® Ã Â¦Â¦Ã Â¦Â¿Ã Â¦Â¨';
+    if (value.trim().length < 2) return 'Ã Â¦Â¨Ã Â¦Â¾Ã Â¦Â® Ã Â¦â€¢Ã Â¦Â®Ã Â¦ÂªÃ Â¦â€¢Ã Â§ÂÃ Â¦Â·Ã Â§â€¡ Ã Â§Â¨ Ã Â¦â€¦Ã Â¦â€¢Ã Â§ÂÃ Â¦Â·Ã Â¦Â° Ã Â¦Â¹Ã Â¦Â¤Ã Â§â€¡ Ã Â¦Â¹Ã Â¦Â¬Ã Â§â€¡';
     return undefined;
   }
   
   function validatePhone(value: string): string | undefined {
     const digits = value.replace(/\D/g, '');
-    if (!digits) return 'মোবাইল নম্বর দিন';
-    if (digits.length !== 11) return 'সঠিক মোবাইল নম্বর দিন (01XXXXXXXXX)';
-    if (!/^01[3-9]/.test(digits)) return 'মোবাইল নম্বর 013-019 দিয়ে শুরু হতে হবে';
+    if (!digits) return 'Ã Â¦Â®Ã Â§â€¹Ã Â¦Â¬Ã Â¦Â¾Ã Â¦â€¡Ã Â¦Â² Ã Â¦Â¨Ã Â¦Â®Ã Â§ÂÃ Â¦Â¬Ã Â¦Â° Ã Â¦Â¦Ã Â¦Â¿Ã Â¦Â¨';
+    if (digits.length !== 11) return 'Ã Â¦Â¸Ã Â¦Â Ã Â¦Â¿Ã Â¦â€¢ Ã Â¦Â®Ã Â§â€¹Ã Â¦Â¬Ã Â¦Â¾Ã Â¦â€¡Ã Â¦Â² Ã Â¦Â¨Ã Â¦Â®Ã Â§ÂÃ Â¦Â¬Ã Â¦Â° Ã Â¦Â¦Ã Â¦Â¿Ã Â¦Â¨ (01XXXXXXXXX)';
+    if (!/^01[3-9]/.test(digits)) return 'Ã Â¦Â®Ã Â§â€¹Ã Â¦Â¬Ã Â¦Â¾Ã Â¦â€¡Ã Â¦Â² Ã Â¦Â¨Ã Â¦Â®Ã Â§ÂÃ Â¦Â¬Ã Â¦Â° 013-019 Ã Â¦Â¦Ã Â¦Â¿Ã Â¦Â¯Ã Â¦Â¼Ã Â§â€¡ Ã Â¦Â¶Ã Â§ÂÃ Â¦Â°Ã Â§Â Ã Â¦Â¹Ã Â¦Â¤Ã Â§â€¡ Ã Â¦Â¹Ã Â¦Â¬Ã Â§â€¡';
     return undefined;
   }
   
   function validateEmail(value: string): string | undefined {
-    if (!value.trim()) return 'ইমেইল দিন';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'সঠিক ইমেইল ফরম্যাট দিন';
+    if (!value.trim()) return 'Ã Â¦â€¡Ã Â¦Â®Ã Â§â€¡Ã Â¦â€¡Ã Â¦Â² Ã Â¦Â¦Ã Â¦Â¿Ã Â¦Â¨';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Ã Â¦Â¸Ã Â¦Â Ã Â¦Â¿Ã Â¦â€¢ Ã Â¦â€¡Ã Â¦Â®Ã Â§â€¡Ã Â¦â€¡Ã Â¦Â² Ã Â¦Â«Ã Â¦Â°Ã Â¦Â®Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¾Ã Â¦Å¸ Ã Â¦Â¦Ã Â¦Â¿Ã Â¦Â¨';
     return undefined;
   }
   
   function validatePassword(value: string): string | undefined {
-    if (!value) return 'পাসওয়ার্ড দিন';
-    if (value.length < 8) return 'পাসওয়ার্ড কমপক্ষে ৮ অক্ষর হতে হবে';
+    if (!value) return 'Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â¸Ã Â¦â€œÃ Â¦Â¯Ã Â¦Â¼Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â¡ Ã Â¦Â¦Ã Â¦Â¿Ã Â¦Â¨';
+    if (value.length < 8) return 'Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â¸Ã Â¦â€œÃ Â¦Â¯Ã Â¦Â¼Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â¡ Ã Â¦â€¢Ã Â¦Â®Ã Â¦ÂªÃ Â¦â€¢Ã Â§ÂÃ Â¦Â·Ã Â§â€¡ Ã Â§Â® Ã Â¦â€¦Ã Â¦â€¢Ã Â§ÂÃ Â¦Â·Ã Â¦Â° Ã Â¦Â¹Ã Â¦Â¤Ã Â§â€¡ Ã Â¦Â¹Ã Â¦Â¬Ã Â§â€¡';
     return undefined;
   }
   
   function validateConfirmPassword(value: string): string | undefined {
-    if (!value) return 'পাসওয়ার্ড নিশ্চিত করুন';
-    if (value !== password) return 'পাসওয়ার্ড মিলছে না';
+    if (!value) return 'Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â¸Ã Â¦â€œÃ Â¦Â¯Ã Â¦Â¼Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â¡ Ã Â¦Â¨Ã Â¦Â¿Ã Â¦Â¶Ã Â§ÂÃ Â¦Å¡Ã Â¦Â¿Ã Â¦Â¤ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨';
+    if (value !== password) return 'Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â¸Ã Â¦â€œÃ Â¦Â¯Ã Â¦Â¼Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â¡ Ã Â¦Â®Ã Â¦Â¿Ã Â¦Â²Ã Â¦â€ºÃ Â§â€¡ Ã Â¦Â¨Ã Â¦Â¾';
     return undefined;
   }
   
@@ -173,7 +173,7 @@
     const emailError = validateEmail(email);
     const passwordError = validatePassword(password);
     const confirmPasswordError = validateConfirmPassword(confirmPassword);
-    const termsError = !acceptTerms ? 'শর্তাবলী মেনে চলতে রাজি হতে হবে' : undefined;
+    const termsError = !acceptTerms ? 'Ã Â¦Â¶Ã Â¦Â°Ã Â§ÂÃ Â¦Â¤Ã Â¦Â¾Ã Â¦Â¬Ã Â¦Â²Ã Â§â‚¬ Ã Â¦Â®Ã Â§â€¡Ã Â¦Â¨Ã Â§â€¡ Ã Â¦Å¡Ã Â¦Â²Ã Â¦Â¤Ã Â§â€¡ Ã Â¦Â°Ã Â¦Â¾Ã Â¦Å“Ã Â¦Â¿ Ã Â¦Â¹Ã Â¦Â¤Ã Â§â€¡ Ã Â¦Â¹Ã Â¦Â¬Ã Â§â€¡' : undefined;
     
     errors = {
       fullName: fullNameError,
@@ -198,7 +198,7 @@
     validateField(field);
   }
   
-  // ─── Handle Input Changes ──────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Handle Input Changes Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   function handleFullNameInput(e: Event) {
     fullName = (e.target as HTMLInputElement).value;
     if (touched.fullName) errors.fullName = validateFullName(fullName);
@@ -229,7 +229,7 @@
     if (touched.confirmPassword) errors.confirmPassword = validateConfirmPassword(confirmPassword);
   }
   
-  // ─── Form Submission ───────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Form Submission Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   async function handleSubmit(e: Event) {
     e.preventDefault();
     
@@ -276,29 +276,29 @@
           
       if (!response.ok) {
         if (response.status === 429) {
-          showModalMessage('সতর্কতা', 'অনেক বেশি চেষ্টা - ১ মিনিট অপেক্ষা করুন', 'error');
+          showModalMessage('Ã Â¦Â¸Ã Â¦Â¤Ã Â¦Â°Ã Â§ÂÃ Â¦â€¢Ã Â¦Â¤Ã Â¦Â¾', 'Ã Â¦â€¦Ã Â¦Â¨Ã Â§â€¡Ã Â¦â€¢ Ã Â¦Â¬Ã Â§â€¡Ã Â¦Â¶Ã Â¦Â¿ Ã Â¦Å¡Ã Â§â€¡Ã Â¦Â·Ã Â§ÂÃ Â¦Å¸Ã Â¦Â¾ - Ã Â§Â§ Ã Â¦Â®Ã Â¦Â¿Ã Â¦Â¨Ã Â¦Â¿Ã Â¦Å¸ Ã Â¦â€¦Ã Â¦ÂªÃ Â§â€¡Ã Â¦â€¢Ã Â§ÂÃ Â¦Â·Ã Â¦Â¾ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨', 'error');
           return;
         }
         
         const errorMessage = data.error || data.message || '';
         
         if (errorMessage.includes('Email') || errorMessage.includes('email')) {
-          errors.email = 'এই ইমেইলটি ইতিমধ্যে নিবন্ধিত';
+          errors.email = 'Ã Â¦ÂÃ Â¦â€¡ Ã Â¦â€¡Ã Â¦Â®Ã Â§â€¡Ã Â¦â€¡Ã Â¦Â²Ã Â¦Å¸Ã Â¦Â¿ Ã Â¦â€¡Ã Â¦Â¤Ã Â¦Â¿Ã Â¦Â®Ã Â¦Â§Ã Â§ÂÃ Â¦Â¯Ã Â§â€¡ Ã Â¦Â¨Ã Â¦Â¿Ã Â¦Â¬Ã Â¦Â¨Ã Â§ÂÃ Â¦Â§Ã Â¦Â¿Ã Â¦Â¤';
           return;
         }
         if (errorMessage.includes('phone') || errorMessage.includes('Phone')) {
-          errors.phone = 'এই মোবাইল নম্বরটি ইতিমধ্যে নিবন্ধিত';
+          errors.phone = 'Ã Â¦ÂÃ Â¦â€¡ Ã Â¦Â®Ã Â§â€¹Ã Â¦Â¬Ã Â¦Â¾Ã Â¦â€¡Ã Â¦Â² Ã Â¦Â¨Ã Â¦Â®Ã Â§ÂÃ Â¦Â¬Ã Â¦Â°Ã Â¦Å¸Ã Â¦Â¿ Ã Â¦â€¡Ã Â¦Â¤Ã Â¦Â¿Ã Â¦Â®Ã Â¦Â§Ã Â§ÂÃ Â¦Â¯Ã Â§â€¡ Ã Â¦Â¨Ã Â¦Â¿Ã Â¦Â¬Ã Â¦Â¨Ã Â§ÂÃ Â¦Â§Ã Â¦Â¿Ã Â¦Â¤';
           return;
         }
         
-        showModalMessage('ত্রুটি', errorMessage || 'সার্ভারে সমস্যা হয়েছে', 'error');
+        showModalMessage('Ã Â¦Â¤Ã Â§ÂÃ Â¦Â°Ã Â§ÂÃ Â¦Å¸Ã Â¦Â¿', errorMessage || 'Ã Â¦Â¸Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â­Ã Â¦Â¾Ã Â¦Â°Ã Â§â€¡ Ã Â¦Â¸Ã Â¦Â®Ã Â¦Â¸Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¾ Ã Â¦Â¹Ã Â¦Â¯Ã Â¦Â¼Ã Â§â€¡Ã Â¦â€ºÃ Â§â€¡', 'error');
         return;
       }
       
       // Success
       showModalMessage(
-        'সফল!',
-        'OTP পাঠানো হয়েছে! ভেরিফিকেশন পেজে নিয়ে যাওয়া হচ্ছে...',
+        'Ã Â¦Â¸Ã Â¦Â«Ã Â¦Â²!',
+        'OTP Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â Ã Â¦Â¾Ã Â¦Â¨Ã Â§â€¹ Ã Â¦Â¹Ã Â¦Â¯Ã Â¦Â¼Ã Â§â€¡Ã Â¦â€ºÃ Â§â€¡! Ã Â¦Â­Ã Â§â€¡Ã Â¦Â°Ã Â¦Â¿Ã Â¦Â«Ã Â¦Â¿Ã Â¦â€¢Ã Â§â€¡Ã Â¦Â¶Ã Â¦Â¨ Ã Â¦ÂªÃ Â§â€¡Ã Â¦Å“Ã Â§â€¡ Ã Â¦Â¨Ã Â¦Â¿Ã Â¦Â¯Ã Â¦Â¼Ã Â§â€¡ Ã Â¦Â¯Ã Â¦Â¾Ã Â¦â€œÃ Â¦Â¯Ã Â¦Â¼Ã Â¦Â¾ Ã Â¦Â¹Ã Â¦Å¡Ã Â§ÂÃ Â¦â€ºÃ Â§â€¡...',
         'success'
       );
       
@@ -312,12 +312,12 @@
       
       if (error instanceof TypeError && error.message === 'Failed to fetch') {
         showModalMessage(
-          'সংযোগ ত্রুটি',
-          'সার্ভারের সাথে সংযোগ করা যাচ্ছে না। দয়া করে নিশ্চিত করুন:\n\n• সার্ভার চালু আছে (localhost:3001)\n• ইন্টারনেট সংযোগ আছে',
+          'Ã Â¦Â¸Ã Â¦â€šÃ Â¦Â¯Ã Â§â€¹Ã Â¦â€” Ã Â¦Â¤Ã Â§ÂÃ Â¦Â°Ã Â§ÂÃ Â¦Å¸Ã Â¦Â¿',
+          'Ã Â¦Â¸Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â­Ã Â¦Â¾Ã Â¦Â°Ã Â§â€¡Ã Â¦Â° Ã Â¦Â¸Ã Â¦Â¾Ã Â¦Â¥Ã Â§â€¡ Ã Â¦Â¸Ã Â¦â€šÃ Â¦Â¯Ã Â§â€¹Ã Â¦â€” Ã Â¦â€¢Ã Â¦Â°Ã Â¦Â¾ Ã Â¦Â¯Ã Â¦Â¾Ã Â¦Å¡Ã Â§ÂÃ Â¦â€ºÃ Â§â€¡ Ã Â¦Â¨Ã Â¦Â¾Ã Â¥Â¤ Ã Â¦Â¦Ã Â¦Â¯Ã Â¦Â¼Ã Â¦Â¾ Ã Â¦â€¢Ã Â¦Â°Ã Â§â€¡ Ã Â¦Â¨Ã Â¦Â¿Ã Â¦Â¶Ã Â§ÂÃ Â¦Å¡Ã Â¦Â¿Ã Â¦Â¤ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨:\n\nÃ¢â‚¬Â¢ Ã Â¦Â¸Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â­Ã Â¦Â¾Ã Â¦Â° Ã Â¦Å¡Ã Â¦Â¾Ã Â¦Â²Ã Â§Â Ã Â¦â€ Ã Â¦â€ºÃ Â§â€¡ (localhost:3001)\nÃ¢â‚¬Â¢ Ã Â¦â€¡Ã Â¦Â¨Ã Â§ÂÃ Â¦Å¸Ã Â¦Â¾Ã Â¦Â°Ã Â¦Â¨Ã Â§â€¡Ã Â¦Å¸ Ã Â¦Â¸Ã Â¦â€šÃ Â¦Â¯Ã Â§â€¹Ã Â¦â€” Ã Â¦â€ Ã Â¦â€ºÃ Â§â€¡',
           'error'
         );
       } else {
-        showModalMessage('ত্রুটি', 'অপ্রত্যাশিত সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'error');
+        showModalMessage('Ã Â¦Â¤Ã Â§ÂÃ Â¦Â°Ã Â§ÂÃ Â¦Å¸Ã Â¦Â¿', 'Ã Â¦â€¦Ã Â¦ÂªÃ Â§ÂÃ Â¦Â°Ã Â¦Â¤Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¾Ã Â¦Â¶Ã Â¦Â¿Ã Â¦Â¤ Ã Â¦Â¸Ã Â¦Â®Ã Â¦Â¸Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¾ Ã Â¦Â¹Ã Â¦Â¯Ã Â¦Â¼Ã Â§â€¡Ã Â¦â€ºÃ Â§â€¡Ã Â¥Â¤ Ã Â¦â€ Ã Â¦Â¬Ã Â¦Â¾Ã Â¦Â° Ã Â¦Å¡Ã Â§â€¡Ã Â¦Â·Ã Â§ÂÃ Â¦Å¸Ã Â¦Â¾ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨Ã Â¥Â¤', 'error');
       }
     } finally {
       isLoading = false;
@@ -328,7 +328,7 @@
 {#if isCheckingAuth}
   <div class="auth-check-loading">
     <Loader2 class="spinner-icon" size={40} />
-    <p>চেক করা হচ্ছে...</p>
+    <p>Ã Â¦Å¡Ã Â§â€¡Ã Â¦â€¢ Ã Â¦â€¢Ã Â¦Â°Ã Â¦Â¾ Ã Â¦Â¹Ã Â¦Å¡Ã Â§ÂÃ Â¦â€ºÃ Â§â€¡...</p>
   </div>
 {:else}
   <div class="register-page">
@@ -349,7 +349,7 @@
       <h2 class="modal-title">{modalTitle}</h2>
       <p class="modal-message">{modalMessage}</p>
       <button class="modal-close-btn" onclick={() => showModal = false}>
-        {modalType === 'success' ? 'ঠিক আছে' : 'বন্ধ করুন'}
+        {modalType === 'success' ? 'Ã Â¦Â Ã Â¦Â¿Ã Â¦â€¢ Ã Â¦â€ Ã Â¦â€ºÃ Â§â€¡' : 'Ã Â¦Â¬Ã Â¦Â¨Ã Â§ÂÃ Â¦Â§ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨'}
       </button>
     </div>
     </div>
@@ -358,29 +358,29 @@
     <!-- Brand Header -->
     <div class="brand-header">
       <div class="brand-logo">
-        <span class="logo-text">🌿</span>
+        <span class="logo-text">Ã°Å¸Å’Â¿</span>
         <span class="brand-name">UNITYPULSE</span>
       </div>
-      <p class="brand-tagline">কমিউনিটি ইউনাইটেড ফর চেঞ্জ</p>
+      <p class="brand-tagline">Ã Â¦â€¢Ã Â¦Â®Ã Â¦Â¿Ã Â¦â€°Ã Â¦Â¨Ã Â¦Â¿Ã Â¦Å¸Ã Â¦Â¿ Ã Â¦â€¡Ã Â¦â€°Ã Â¦Â¨Ã Â¦Â¾Ã Â¦â€¡Ã Â¦Å¸Ã Â§â€¡Ã Â¦Â¡ Ã Â¦Â«Ã Â¦Â° Ã Â¦Å¡Ã Â§â€¡Ã Â¦Å¾Ã Â§ÂÃ Â¦Å“</p>
     </div>
     
     <!-- Register Card -->
     <div class="register-card">
-      <h1 class="heading">অ্যাকাউন্ট খুলুন</h1>
-      <p class="subheading">UnityPulse-এ স্বাগতম</p>
+      <h1 class="heading">Ã Â¦â€¦Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¾Ã Â¦â€¢Ã Â¦Â¾Ã Â¦â€°Ã Â¦Â¨Ã Â§ÂÃ Â¦Å¸ Ã Â¦â€“Ã Â§ÂÃ Â¦Â²Ã Â§ÂÃ Â¦Â¨</h1>
+      <p class="subheading">UnityPulse-Ã Â¦Â Ã Â¦Â¸Ã Â§ÂÃ Â¦Â¬Ã Â¦Â¾Ã Â¦â€”Ã Â¦Â¤Ã Â¦Â®</p>
       
       <form onsubmit={handleSubmit} novalidate>
         
         <!-- Full Name -->
         <div class="form-group">
-          <label for="fullName" class="form-label">👤 পূর্ণ নাম</label>
+          <label for="fullName" class="form-label">Ã°Å¸â€˜Â¤ Ã Â¦ÂªÃ Â§â€šÃ Â¦Â°Ã Â§ÂÃ Â¦Â£ Ã Â¦Â¨Ã Â¦Â¾Ã Â¦Â®</label>
           <input
             type="text"
             id="fullName"
             class="form-input"
             class:input-error={touched.fullName && errors.fullName}
             class:input-valid={touched.fullName && !errors.fullName && fullName.length > 0}
-            placeholder="আপনার পূর্ণ নাম লিখুন"
+            placeholder="Ã Â¦â€ Ã Â¦ÂªÃ Â¦Â¨Ã Â¦Â¾Ã Â¦Â° Ã Â¦ÂªÃ Â§â€šÃ Â¦Â°Ã Â§ÂÃ Â¦Â£ Ã Â¦Â¨Ã Â¦Â¾Ã Â¦Â® Ã Â¦Â²Ã Â¦Â¿Ã Â¦â€“Ã Â§ÂÃ Â¦Â¨"
             bind:value={fullName}
             oninput={handleFullNameInput}
             onblur={() => handleBlur('fullName')}
@@ -394,7 +394,7 @@
         
         <!-- Phone -->
         <div class="form-group">
-          <label for="phone" class="form-label">📱 মোবাইল নম্বর</label>
+          <label for="phone" class="form-label">Ã°Å¸â€œÂ± Ã Â¦Â®Ã Â§â€¹Ã Â¦Â¬Ã Â¦Â¾Ã Â¦â€¡Ã Â¦Â² Ã Â¦Â¨Ã Â¦Â®Ã Â§ÂÃ Â¦Â¬Ã Â¦Â°</label>
           <input
             type="tel"
             id="phone"
@@ -409,7 +409,7 @@
             autocomplete="tel"
             maxlength="12"
           />
-          <p class="hint-text">উদাহরণ: 01712345678</p>
+          <p class="hint-text">Ã Â¦â€°Ã Â¦Â¦Ã Â¦Â¾Ã Â¦Â¹Ã Â¦Â°Ã Â¦Â£: 01712345678</p>
           {#if touched.phone && errors.phone}
             <p class="error-text"><AlertCircle size={14} /> {errors.phone}</p>
           {/if}
@@ -417,14 +417,14 @@
         
         <!-- Email -->
         <div class="form-group">
-          <label for="email" class="form-label">📧 ইমেইল অ্যাড্রেস</label>
+          <label for="email" class="form-label">Ã°Å¸â€œÂ§ Ã Â¦â€¡Ã Â¦Â®Ã Â§â€¡Ã Â¦â€¡Ã Â¦Â² Ã Â¦â€¦Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¾Ã Â¦Â¡Ã Â§ÂÃ Â¦Â°Ã Â§â€¡Ã Â¦Â¸</label>
           <input
             type="email"
             id="email"
             class="form-input"
             class:input-error={touched.email && errors.email}
             class:input-valid={touched.email && !errors.email && email.length > 0}
-            placeholder="আপনার ইমেইল দিন"
+            placeholder="Ã Â¦â€ Ã Â¦ÂªÃ Â¦Â¨Ã Â¦Â¾Ã Â¦Â° Ã Â¦â€¡Ã Â¦Â®Ã Â§â€¡Ã Â¦â€¡Ã Â¦Â² Ã Â¦Â¦Ã Â¦Â¿Ã Â¦Â¨"
             bind:value={email}
             oninput={handleEmailInput}
             onblur={() => handleBlur('email')}
@@ -438,7 +438,7 @@
         
         <!-- Password -->
         <div class="form-group">
-          <label for="password" class="form-label">🔒 পাসওয়ার্ড</label>
+          <label for="password" class="form-label">Ã°Å¸â€â€™ Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â¸Ã Â¦â€œÃ Â¦Â¯Ã Â¦Â¼Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â¡</label>
           <div class="input-wrapper">
             <input
               type={showPassword ? 'text' : 'password'}
@@ -446,7 +446,7 @@
               class="form-input"
               class:input-error={touched.password && errors.password}
               class:input-valid={touched.password && !errors.password && password.length > 0}
-              placeholder="কমপক্ষে ৮ অক্ষর"
+              placeholder="Ã Â¦â€¢Ã Â¦Â®Ã Â¦ÂªÃ Â¦â€¢Ã Â§ÂÃ Â¦Â·Ã Â§â€¡ Ã Â§Â® Ã Â¦â€¦Ã Â¦â€¢Ã Â§ÂÃ Â¦Â·Ã Â¦Â°"
               bind:value={password}
               oninput={handlePasswordInput}
               onblur={() => handleBlur('password')}
@@ -465,9 +465,9 @@
                 <div class="strength-bar-fill" style="width: {passwordStrength.percent}%; background: {passwordStrength.color};"></div>
               </div>
               <span class="strength-label" style="color: {passwordStrength.color};">
-                {#if passwordStrength.label === 'দুর্বল'}
+                {#if passwordStrength.label === 'Ã Â¦Â¦Ã Â§ÂÃ Â¦Â°Ã Â§ÂÃ Â¦Â¬Ã Â¦Â²'}
                 <ShieldAlert size={14} />
-              {:else if passwordStrength.label === 'মাঝারি'}
+              {:else if passwordStrength.label === 'Ã Â¦Â®Ã Â¦Â¾Ã Â¦ÂÃ Â¦Â¾Ã Â¦Â°Ã Â¦Â¿'}
                 <Shield size={14} />
               {:else}
                 <ShieldCheck size={14} />
@@ -480,23 +480,23 @@
             <div class="checklist">
               <div class="checklist-item" class:met={passwordChecks.minLength}>
                 {#if passwordChecks.minLength}<CheckCircle2 size={14} />{:else}<XCircle size={14} />{/if}
-                <span>কমপক্ষে ৮ অক্ষর</span>
+                <span>Ã Â¦â€¢Ã Â¦Â®Ã Â¦ÂªÃ Â¦â€¢Ã Â§ÂÃ Â¦Â·Ã Â§â€¡ Ã Â§Â® Ã Â¦â€¦Ã Â¦â€¢Ã Â§ÂÃ Â¦Â·Ã Â¦Â°</span>
               </div>
               <div class="checklist-item" class:met={passwordChecks.hasUpperCase}>
                 {#if passwordChecks.hasUpperCase}<CheckCircle2 size={14} />{:else}<XCircle size={14} />{/if}
-                <span>বড় হাতের অক্ষর (A-Z)</span>
+                <span>Ã Â¦Â¬Ã Â¦Â¡Ã Â¦Â¼ Ã Â¦Â¹Ã Â¦Â¾Ã Â¦Â¤Ã Â§â€¡Ã Â¦Â° Ã Â¦â€¦Ã Â¦â€¢Ã Â§ÂÃ Â¦Â·Ã Â¦Â° (A-Z)</span>
               </div>
               <div class="checklist-item" class:met={passwordChecks.hasLowerCase}>
                 {#if passwordChecks.hasLowerCase}<CheckCircle2 size={14} />{:else}<XCircle size={14} />{/if}
-                <span>ছোট হাতের অক্ষর (a-z)</span>
+                <span>Ã Â¦â€ºÃ Â§â€¹Ã Â¦Å¸ Ã Â¦Â¹Ã Â¦Â¾Ã Â¦Â¤Ã Â§â€¡Ã Â¦Â° Ã Â¦â€¦Ã Â¦â€¢Ã Â§ÂÃ Â¦Â·Ã Â¦Â° (a-z)</span>
               </div>
               <div class="checklist-item" class:met={passwordChecks.hasNumber}>
                 {#if passwordChecks.hasNumber}<CheckCircle2 size={14} />{:else}<XCircle size={14} />{/if}
-                <span>সংখ্যা (0-9)</span>
+                <span>Ã Â¦Â¸Ã Â¦â€šÃ Â¦â€“Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¾ (0-9)</span>
               </div>
               <div class="checklist-item" class:met={passwordChecks.hasSpecial}>
                 {#if passwordChecks.hasSpecial}<CheckCircle2 size={14} />{:else}<XCircle size={14} />{/if}
-                <span>বিশেষ চিহ্ন (@#$%^&*)</span>
+                <span>Ã Â¦Â¬Ã Â¦Â¿Ã Â¦Â¶Ã Â§â€¡Ã Â¦Â· Ã Â¦Å¡Ã Â¦Â¿Ã Â¦Â¹Ã Â§ÂÃ Â¦Â¨ (@#$%^&*)</span>
               </div>
             </div>
           {/if}
@@ -508,7 +508,7 @@
         
         <!-- Confirm Password -->
         <div class="form-group">
-          <label for="confirmPassword" class="form-label">🔐 পাসওয়ার্ড নিশ্চিত করুন</label>
+          <label for="confirmPassword" class="form-label">Ã°Å¸â€Â Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â¸Ã Â¦â€œÃ Â¦Â¯Ã Â¦Â¼Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â¡ Ã Â¦Â¨Ã Â¦Â¿Ã Â¦Â¶Ã Â§ÂÃ Â¦Å¡Ã Â¦Â¿Ã Â¦Â¤ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨</label>
           <div class="input-wrapper">
             <input
               type={showConfirmPassword ? 'text' : 'password'}
@@ -516,7 +516,7 @@
               class="form-input"
               class:input-error={touched.confirmPassword && errors.confirmPassword}
               class:input-valid={touched.confirmPassword && !errors.confirmPassword && confirmPassword.length > 0}
-              placeholder="পাসওয়ার্ড আবার দিন"
+              placeholder="Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â¸Ã Â¦â€œÃ Â¦Â¯Ã Â¦Â¼Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â¡ Ã Â¦â€ Ã Â¦Â¬Ã Â¦Â¾Ã Â¦Â° Ã Â¦Â¦Ã Â¦Â¿Ã Â¦Â¨"
               bind:value={confirmPassword}
               oninput={handleConfirmPasswordInput}
               onblur={() => handleBlur('confirmPassword')}
@@ -528,7 +528,7 @@
             </button>
           </div>
           {#if touched.confirmPassword && confirmPassword.length > 0 && !errors.confirmPassword}
-            <p class="success-text"><CheckCircle2 size={14} /> পাসওয়ার্ড মিলেছে</p>
+            <p class="success-text"><CheckCircle2 size={14} /> Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â¸Ã Â¦â€œÃ Â¦Â¯Ã Â¦Â¼Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â¡ Ã Â¦Â®Ã Â¦Â¿Ã Â¦Â²Ã Â§â€¡Ã Â¦â€ºÃ Â§â€¡</p>
           {/if}
           {#if touched.confirmPassword && errors.confirmPassword}
             <p class="error-text"><AlertCircle size={14} /> {errors.confirmPassword}</p>
@@ -541,7 +541,7 @@
             <input type="checkbox" bind:checked={acceptTerms} disabled={isLoading} />
             <span class="checkmark-box"></span>
             <span class="terms-text">
-              আমি <a href="/terms" target="_blank">শর্তাবলী</a> ও <a href="/privacy" target="_blank">গোপনীয়তা নীতি</a> মেনে চলতে রাজি আছি
+              Ã Â¦â€ Ã Â¦Â®Ã Â¦Â¿ <a href="/terms" target="_blank">Ã Â¦Â¶Ã Â¦Â°Ã Â§ÂÃ Â¦Â¤Ã Â¦Â¾Ã Â¦Â¬Ã Â¦Â²Ã Â§â‚¬</a> Ã Â¦â€œ <a href="/privacy" target="_blank">Ã Â¦â€”Ã Â§â€¹Ã Â¦ÂªÃ Â¦Â¨Ã Â§â‚¬Ã Â¦Â¯Ã Â¦Â¼Ã Â¦Â¤Ã Â¦Â¾ Ã Â¦Â¨Ã Â§â‚¬Ã Â¦Â¤Ã Â¦Â¿</a> Ã Â¦Â®Ã Â§â€¡Ã Â¦Â¨Ã Â§â€¡ Ã Â¦Å¡Ã Â¦Â²Ã Â¦Â¤Ã Â§â€¡ Ã Â¦Â°Ã Â¦Â¾Ã Â¦Å“Ã Â¦Â¿ Ã Â¦â€ Ã Â¦â€ºÃ Â¦Â¿
             </span>
           </label>
           {#if errors.terms}
@@ -553,27 +553,25 @@
         <button type="submit" class="register-btn" disabled={isLoading}>
           {#if isLoading}
             <Loader2 class="btn-spinner" size={20} />
-            <span>রেজিস্ট্রেশন হচ্ছে...</span>
+            <span>Ã Â¦Â°Ã Â§â€¡Ã Â¦Å“Ã Â¦Â¿Ã Â¦Â¸Ã Â§ÂÃ Â¦Å¸Ã Â§ÂÃ Â¦Â°Ã Â§â€¡Ã Â¦Â¶Ã Â¦Â¨ Ã Â¦Â¹Ã Â¦Å¡Ã Â§ÂÃ Â¦â€ºÃ Â§â€¡...</span>
           {:else}
-            <span>📝 রেজিস্ট্রেশন করুন</span>
+            <span>Ã°Å¸â€œÂ Ã Â¦Â°Ã Â§â€¡Ã Â¦Å“Ã Â¦Â¿Ã Â¦Â¸Ã Â§ÂÃ Â¦Å¸Ã Â§ÂÃ Â¦Â°Ã Â§â€¡Ã Â¦Â¶Ã Â¦Â¨ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨</span>
           {/if}
         </button>
       </form>
       
       <!-- Login Link -->
       <div class="login-link">
-        <span>ইতিমধ্যে অ্যাকাউন্ট আছে?</span>
-        <a href="/login">লগইন করুন</a>
+        <span>Ã Â¦â€¡Ã Â¦Â¤Ã Â¦Â¿Ã Â¦Â®Ã Â¦Â§Ã Â§ÂÃ Â¦Â¯Ã Â§â€¡ Ã Â¦â€¦Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¾Ã Â¦â€¢Ã Â¦Â¾Ã Â¦â€°Ã Â¦Â¨Ã Â§ÂÃ Â¦Å¸ Ã Â¦â€ Ã Â¦â€ºÃ Â§â€¡?</span>
+        <a href="/login">Ã Â¦Â²Ã Â¦â€”Ã Â¦â€¡Ã Â¦Â¨ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨</a>
       </div>
     </div>
   </div>
 {/if}
 
 <style>
-  /* ─── Global Font Import ────────────────────── */
-  @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-  
-  /* ─── Auth Check Loading ────────────────────── */
+  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Global Font Import Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Auth Check Loading Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   .auth-check-loading {
     display: flex;
     flex-direction: column;
@@ -589,7 +587,7 @@
     font-size: 1rem;
   }
   
-  /* ─── Main Page ─────────────────────────────── */
+  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Main Page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   .register-page {
     display: flex;
     flex-direction: column;
@@ -601,7 +599,7 @@
     font-family: 'Hind Siliguri', sans-serif;
   }
   
-  /* ─── Brand Header ──────────────────────────── */
+  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Brand Header Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   .brand-header {
     text-align: center;
     margin-bottom: 1.5rem;
@@ -627,7 +625,7 @@
     margin: 0;
   }
   
-  /* ─── Register Card ─────────────────────────── */
+  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Register Card Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   .register-card {
     background: white;
     border-radius: 16px;
@@ -658,7 +656,7 @@
     margin: 0 0 1.5rem 0;
   }
   
-  /* ─── Form ───────────────────────────────────── */
+  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Form Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   form {
     display: flex;
     flex-direction: column;
@@ -729,7 +727,7 @@
   }
   .toggle-btn:hover { color: #5a7d6a; }
   
-  /* ─── Messages ───────────────────────────────── */
+  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Messages Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   .hint-text {
     font-size: 0.75rem;
     color: #8ba89a;
@@ -752,7 +750,7 @@
     margin: 0.25rem 0 0 0.25rem;
   }
   
-  /* ─── Password Strength ──────────────────────── */
+  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Password Strength Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   .strength-meter {
     display: flex;
     align-items: center;
@@ -800,7 +798,7 @@
   }
   .checklist-item.met { color: #2ecc71; }
   
-  /* ─── Terms ──────────────────────────────────── */
+  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Terms Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   .terms-group { margin-top: 0.25rem; }
   .terms-label {
     display: flex;
@@ -851,7 +849,7 @@
   }
   .terms-text a:hover { text-decoration: underline; }
   
-  /* ─── REGISTER BUTTON ────────────────────────── */
+  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ REGISTER BUTTON Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   .register-btn {
     display: flex;
     align-items: center;
@@ -895,7 +893,7 @@
     to { transform: rotate(360deg); }
   }
   
-  /* ─── Login Link ─────────────────────────────── */
+  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Login Link Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   .login-link {
     text-align: center;
     margin-top: 1.25rem;
@@ -915,7 +913,7 @@
   }
   .login-link a:hover { text-decoration: underline; }
   
-  /* ─── CENTERED MODAL ─────────────────────────── */
+  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ CENTERED MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   .modal-overlay {
     position: fixed;
     top: 0;
@@ -988,7 +986,7 @@
   .modal-error .modal-close-btn { background: #fef5f5; color: #e74c3c; }
   .modal-close-btn:hover { opacity: 0.8; }
   
-  /* ─── Scrollbar ──────────────────────────────── */
+  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Scrollbar Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
   .register-card::-webkit-scrollbar { width: 6px; }
   .register-card::-webkit-scrollbar-track { background: transparent; }
   .register-card::-webkit-scrollbar-thumb { background: #d4ede0; border-radius: 3px; }

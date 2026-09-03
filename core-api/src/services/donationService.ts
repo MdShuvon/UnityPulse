@@ -218,6 +218,43 @@ export class DonationService {
 
     return donation;
   }
+    async getDonationLedger(adminId: string, filters: {
+    projectId?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const where: any = {};
+
+    if (filters.projectId) {
+      where.projectId = filters.projectId;
+    }
+
+    if (filters.startDate || filters.endDate) {
+      where.createdAt = {};
+      if (filters.startDate) {
+        where.createdAt.gte = new Date(filters.startDate);
+      }
+      if (filters.endDate) {
+        where.createdAt.lte = new Date(filters.endDate);
+      }
+    }
+
+    return prisma.donation.findMany({
+      where,
+      select: {
+        id: true,
+        amount: true,
+        method: true,
+        paymentRef: true,
+        status: true,
+        createdAt: true,
+        guestName: true,
+        user: { select: { id: true, name: true } },
+        project: { select: { id: true, title: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }
 
 export const donationService = new DonationService();

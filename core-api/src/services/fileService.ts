@@ -13,7 +13,7 @@ const ALLOWED_TYPES: Record<string, string[]> = {
   documents: ['image/jpeg', 'image/png', 'application/pdf'],
 };
 
-const MAX_MB = 5;
+const MAX_MB = 15; // 15MB for better quality
 
 export class FileService {
 

@@ -1,28 +1,29 @@
+/* Fonts loaded in app.html */
+/* @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap'); */
 /* ═══════════════════════════════════════════════
    UnityPulse — Global Styles
    Theme: Green + White | Mobile First
    ═══════════════════════════════════════════════ */
-
 /* ── CSS Variables ─────────────────────────────── */
-:root {
+/* :root { */
   /* Green palette */
-  --green-50:  #f0fdf4;
+  /* --green-50:  #f0fdf4;
   --green-100: #dcfce7;
   --green-200: #bbf7d0;
   --green-300: #86efac;
   --green-500: #22c55e;
   --green-600: #16a34a;
   --green-700: #15803d;
-  --green-800: #166534;
+  --green-800: #166534; */
 
   /* Semantic tokens */
-  --primary:        var(--green-600);
+  /* --primary:        var(--green-600);
   --primary-dark:   var(--green-700);
   --primary-light:  var(--green-100);
-  --primary-subtle: var(--green-50);
+  --primary-subtle: var(--green-50); */
 
   /* Neutrals */
-  --white:     #ffffff;
+  /* --white:     #ffffff;
   --gray-50:   #f9fafb;
   --gray-100:  #f3f4f6;
   --gray-200:  #e5e7eb;
@@ -32,50 +33,50 @@
   --gray-600:  #4b5563;
   --gray-700:  #374151;
   --gray-800:  #1f2937;
-  --gray-900:  #111827;
+  --gray-900:  #111827; */
 
   /* Text */
-  --text:       var(--gray-900);
+  /* --text:       var(--gray-900);
   --text-muted: var(--gray-500);
-  --text-light: var(--gray-400);
+  --text-light: var(--gray-400); */
 
   /* Border */
-  --border:       var(--gray-200);
-  --border-focus: var(--primary);
+  /* --border:       var(--gray-200); */
+  /* --border-focus: var(--primary); */
 
   /* Status */
-  --error:     #dc2626;
+  /* --error:     #dc2626;
   --error-bg:  #fef2f2;
   --error-border: #fecaca;
   --success:     var(--green-700);
   --success-bg:  var(--green-100);
-  --success-border: var(--green-300);
+  --success-border: var(--green-300); */
 
   /* Radius */
-  --radius-xs:  4px;
+  /* --radius-xs:  4px;
   --radius-sm:  6px;
   --radius:     10px;
   --radius-lg:  16px;
   --radius-xl:  24px;
-  --radius-full: 9999px;
+  --radius-full: 9999px; */
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  /* --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
   --shadow:    0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
   --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
-  --shadow-lg: 0 10px 25px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.05);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.05); */
 
   /* Typography */
-  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-          'Noto Sans Bengali', 'Hind Siliguri', sans-serif;
+  /* --font-heading: 'Hind Siliguri', sans-serif;
+  --font-body: 'Hind Siliguri', sans-serif; */
 
   /* Transitions */
-  --t: 150ms ease;
+  /* --t: 150ms ease;
   --t-slow: 250ms ease;
-}
+} */
 
 /* ── Reset ─────────────────────────────────────── */
-*, *::before, *::after {
+/* *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -88,7 +89,7 @@ html {
 }
 
 body {
-  font-family: var(--font);
+  font-family: var(--font-body);
   color: var(--text);
   background: var(--primary-subtle);
   line-height: 1.6;
@@ -97,7 +98,8 @@ body {
 }
 
 /* ── Typography ────────────────────────────────── */
-h1, h2, h3, h4, h5 {
+/* h1, h2, h3, h4, h5 {
+  font-family: var(--font-heading);
   font-weight: 700;
   line-height: 1.3;
   color: var(--text);
@@ -112,16 +114,16 @@ a {
 }
 a:hover { color: var(--primary-dark); }
 
-img, svg { display: block; max-width: 100%; }
+img, svg { display: block; max-width: 100%; } */ 
 
 /* ── Form Elements ──────────────────────────────── */
-input, textarea, select, button {
+/* input, textarea, select, button {
   font-family: inherit;
   font-size: 1rem;
-}
+} */
 
 /* ── Utility Classes ────────────────────────────── */
-.sr-only {
+/* .sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -132,3 +134,67 @@ input, textarea, select, button {
 
 .text-center { text-align: center; }
 .text-muted  { color: var(--text-muted); }
+ */
+
+/* UnityPulse — Global Styles */
+
+:root {
+  --primary:       #2ecc71;
+  --primary-dark:  #27ae60;
+  --text-primary:  #1a2e23;
+  --text-secondary: #5a7d6a;
+  --text-light:    #8ba89a;
+  --border:        #d4ede0;
+  --border-light:  #e8f5ee;
+  --bg-main:       #f8faf9;
+  --bg-white:      #ffffff;
+  --error:         #e74c3c;
+  --warning:       #f39c12;
+  --success:       #2ecc71;
+}
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Baloo Da 2', sans-serif;
+  font-weight: 700;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+.bangla {
+  font-family: 'Hind Siliguri', sans-serif;
+}
+
+.mono {
+  font-family: 'DM Mono', monospace;
+}

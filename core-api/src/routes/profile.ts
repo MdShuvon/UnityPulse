@@ -23,6 +23,43 @@ export async function profileRoutes(app: FastifyInstance) {
     return reply.send(profile);
   });
 
+  // GET /profile/:id/posts — public posts only
+  app.get('/profile/:id/posts', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const { limit = '20', page = '1' } = req.query as any;
+    const posts = await profileService.getPublicPosts(id, Math.max(1, +limit), Math.max(1, +page));
+    return reply.send(posts);
+  });
+
+  // POST /profile/:id/follow — follow/unfollow
+  app.post('/profile/:id/follow',
+    { preHandler: requireAuth },
+    async (req, reply) => {
+      const viewerId = (req.session as any).userId;
+      const { id } = req.params as { id: string };
+      const result = await profileService.toggleFollow(viewerId, id);
+      return reply.send(result);
+    }
+  );
+
+  // GET /profile/:id/follow-counts
+  app.get('/profile/:id/follow-counts', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const counts = await profileService.getFollowCounts(id);
+    return reply.send(counts);
+  });
+
+  // GET /profile/:id/is-following
+  app.get('/profile/:id/is-following',
+    { preHandler: requireAuth },
+    async (req, reply) => {
+      const viewerId = (req.session as any).userId;
+      const { id } = req.params as { id: string };
+      const following = await profileService.isFollowing(viewerId, id);
+      return reply.send({ isFollowing: following });
+    }
+  );
+
   // PATCH /profile — update
   app.patch('/profile',
     { preHandler: requireAuth },

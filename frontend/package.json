@@ -12,21 +12,19 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
+		"@capacitor/android": "^8.5.0",
 		"@sveltejs/adapter-auto": "^7.0.1",
-		"@sveltejs/kit": "^2.57.0",
-		"@sveltejs/vite-plugin-svelte": "^7.0.0",
-		"@tailwindcss/vite": "^4.3.0",
-		"@types/node": "^25.9.1",
-		"svelte": "^5.55.2",
-		"svelte-check": "^4.4.6",
-		"tailwindcss": "^4.3.0",
-		"typescript": "^6.0.2",
-		"vite": "^8.0.7"
+		"@sveltejs/kit": "^2.63.0",
+		"@sveltejs/vite-plugin-svelte": "^7.1.2",
+		"svelte": "^5.56.1",
+		"svelte-check": "^4.6.0",
+		"typescript": "^6.0.3",
+		"vite": "^8.0.16"
 	},
 	"dependencies": {
-		"@types/marked": "^5.0.2",
-		"axios": "^1.16.1",
-		"lucide-svelte": "^1.0.1",
-		"marked": "^18.0.4"
+		"@capacitor/cli": "^8.5.0",
+		"@capacitor/core": "^8.5.0",
+		"@lucide/svelte": "^1.33.0",
+		"lucide-svelte": "^1.0.1"
 	}
 }

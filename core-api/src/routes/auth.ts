@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyRequest } from 'fastify';
 import { userService } from '../services/userService';
+
 import {
   registerSchema,
   verifyOtpSchema,
@@ -13,6 +14,9 @@ declare module 'fastify' {
   interface Session {
     userId: string;
     role: string;
+  }
+  interface FastifyInstance {
+    googleOAuth2: any;
   }
 }
 
@@ -80,4 +84,44 @@ export async function authRoutes(app: FastifyInstance) {
     const user = await userService.getProfile(userId);
     return reply.send(user);
   });
+
+
+  // GET /auth/google/callback — Google OAuth callback
+  app.get('/auth/google/callback', async (req, reply) => {
+    try {
+      const tokenResult = await (app as any).googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(req);
+      const idToken = tokenResult?.token?.id_token || tokenResult?.id_token;
+
+      if (!idToken) {
+        throw new Error('No id_token received');
+      }
+
+      const parts = idToken.split('.');
+      if (parts.length !== 3) throw new Error('Invalid id_token');
+
+      const base64Payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString('utf8'));
+
+      const user = await userService.googleLogin({
+        googleId: payload.sub,
+        email: payload.email,
+        name: payload.name,
+        profilePhoto: payload.picture,
+      });
+      
+      // Set session
+      req.session.userId = user.id;
+      req.session.role = user.role;
+      
+      // Redirect to frontend dashboard
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      return reply.redirect(`${frontendUrl}/dashboard`);
+      
+    } catch (error: any) {
+      console.error('Google OAuth error:', error);
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      return reply.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+    }
+  });
 }
+

@@ -17,17 +17,23 @@ import { donationRoutes }     from './routes/donations';
 import { taskRoutes }         from './routes/tasks';
 import { leaderboardRoutes }  from './routes/leaderboard';
 import { postRoutes }         from './routes/posts';
+import { photoRoutes }        from './routes/photos';
 import { careerRoutes }       from './routes/career';
 import { dashboardRoutes }    from './routes/dashboard';
 import { notificationRoutes } from './routes/notifications';
 import { localAdminRoutes }   from './routes/localAdmin';
 
+import { adminUserRoutes } from './routes/admin/users';
 import { adminDonationRoutes } from './routes/admin/donations';
 import { adminKycRoutes }      from './routes/admin/kyc';
 import { adminTaskRoutes }     from './routes/admin/tasks';
 import { adminPostRoutes }     from './routes/admin/posts';
 import { adminCareerRoutes }   from './routes/admin/career';
 import { superAdminRoutes } from './routes/superAdmin';
+import { passwordResetRoutes } from './routes/passwordReset';
+import googleOAuthPlugin from './plugins/googleOAuth';
+
+
 
 const app = Fastify({ logger: true });
 
@@ -88,6 +94,9 @@ async function start() {
 
   // ── Health check ────────────────────────────────
   app.get('/health', async () => ({ status: 'ok', time: new Date() }));
+    // ── Google OAuth Plugin (আগে register করতে হবে) ──
+  await app.register(googleOAuthPlugin);
+
 
   // ── Public + Member routes ──────────────────────
   await app.register(authRoutes);
@@ -97,11 +106,12 @@ async function start() {
   await app.register(taskRoutes);
   await app.register(leaderboardRoutes);
   await app.register(postRoutes);
+  await app.register(photoRoutes);
   await app.register(careerRoutes);
   await app.register(dashboardRoutes);
   await app.register(notificationRoutes);
   await app.register(localAdminRoutes);
-
+  await app.register(passwordResetRoutes);
   // ── Admin routes ────────────────────────────────
   await app.register(adminKycRoutes);
   await app.register(adminDonationRoutes);
@@ -109,6 +119,8 @@ async function start() {
   await app.register(adminPostRoutes);
   await app.register(adminCareerRoutes);
   await app.register(superAdminRoutes);
+  await app.register(adminUserRoutes);
+
 
   // ── Global error handler ────────────────────────
   app.setErrorHandler((error, req, reply) => {

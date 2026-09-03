@@ -226,7 +226,8 @@ export class PostService {
       if (parentId) {
         const parent = await tx.comment.findUnique({ where: { id: parentId } });
         if (!parent || parent.isDeleted) throw new Error('Parent comment পাওয়া যায়নি');
-        if (parent.depth >= 2) throw new Error('সর্বোচ্চ ৩ level comment করা যাবে');
+                
+        if (parent.depth >= 4) throw new Error('সর্বোচ্চ ৫ level comment করা যাবে');
         depth = parent.depth + 1;
       }
       return tx.comment.create({
@@ -263,9 +264,21 @@ export class PostService {
             where:   { isDeleted: false },
             include: {
               user:    { select: { id: true, name: true, profilePhoto: true } },
+              _count:  { select: { likes: true } },
               replies: {
                 where:   { isDeleted: false },
-                include: { user: { select: { id: true, name: true, profilePhoto: true } } },
+                include: { 
+                  user:   { select: { id: true, name: true, profilePhoto: true } },
+                  _count: { select: { likes: true } },
+                  replies: {
+                    where:   { isDeleted: false },
+                    include: { 
+                      user:   { select: { id: true, name: true, profilePhoto: true } },
+                      _count: { select: { likes: true } },
+                    },
+                    orderBy: { createdAt: 'asc' },
+                  },
+                },
                 orderBy: { createdAt: 'asc' },
               },
             },
