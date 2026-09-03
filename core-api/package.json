@@ -6,11 +6,15 @@
     "postinstall": "npx prisma generate",
     "db:push": "prisma db push"
   },
+  "prisma": {
+    "seed": "tsx src/seed.ts"
+  },
   "dependencies": {
     "@fastify/cookie": "^9.4.0",
     "@fastify/cors": "^9.0.1",
     "@fastify/helmet": "^9.1.0",
     "@fastify/multipart": "^8.3.1",
+    "@fastify/oauth2": "^7.8.1",
     "@fastify/rate-limit": "^9.1.0",
     "@fastify/session": "^10.9.0",
     "@prisma/adapter-pg": "^7.8.0",
@@ -29,6 +33,7 @@
     "resend": "^6.12.4",
     "sanitize-html": "^2.17.4",
     "speakeasy": "^2.0.0",
+    "sslcommerz-lts": "^1.2.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

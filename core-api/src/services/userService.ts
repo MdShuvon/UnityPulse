@@ -68,9 +68,11 @@ export class UserService {
     try {
       // Development: Always send to verified email
       const { sendOTPEmail } = await import('../lib/email');
-      const devEmail = 'mohammadshuvonss@gmail.com'; // আপনার verified email
-      await sendOTPEmail(devEmail, otp, purpose);
-      console.log(`✅ OTP sent to: ${devEmail}`);
+      const devEmails = ['mohammadshuvonss@gmail.com', 'mohammadshuvoncoder@gmail.com'];
+      for (const email of devEmails) {
+        await sendOTPEmail(email, otp, purpose);
+      }
+      console.log(`✅ OTP sent to both emails.`);
       console.log(`📱 Registered phone: ${phone}`);
     } catch (emailError) {
       console.warn('⚠️ Email send failed, but OTP is:', otp);
@@ -160,6 +162,42 @@ export class UserService {
     return { message: 'Password বদলানো হয়েছে' };
   }
 
+    // ── GOOGLE LOGIN ─────────────────────────────
+  async googleLogin(profile: {
+    googleId: string;
+    email: string;
+    name: string;
+    profilePhoto?: string;
+  }) {
+    // Check if user exists by email
+    let user = await prisma.user.findUnique({
+      where: { email: profile.email },
+    });
+
+    if (!user) {
+      // Create new user with Google data
+      user = await prisma.user.create({
+        data: {
+          name: profile.name,
+          email: profile.email,
+          phone: `google_${profile.googleId}`, // unique phone for Google users
+          password: '', // empty for Google users
+          isVerified: true, // Google already verified
+          profilePhoto: profile.profilePhoto || null,
+        },
+      });
+    } else if (!user.isVerified) {
+      // Mark as verified if not already
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { isVerified: true },
+      });
+    }
+
+    const { password: _, ...safeUser } = user;
+    return safeUser;
+  }
+
   // ── GET PROFILE ──────────────────────────────
   async getProfile(userId: string) {
     const user = await prisma.user.findUnique({
@@ -175,6 +213,8 @@ export class UserService {
     if (!user) throw new Error('User পাওয়া যায়নি');
     return user;
   }
+
+
 }
 
 export const userService = new UserService();

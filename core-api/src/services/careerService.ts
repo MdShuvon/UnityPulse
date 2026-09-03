@@ -96,12 +96,18 @@ export class CareerService {
     });
     if (existing) throw new Error('এই job এ আপনি ইতিমধ্যে apply করেছেন');
 
-    // Fix 2: Payment check
+    // Fix 2: Payment check - MOCK mode-এ skip
     if (job.applicationFee > 0) {
-      if (!paymentRef) throw new Error(`এই job এ apply করতে ৳${job.applicationFee} fee দিতে হবে`);
-
-      const result = await paymentService.verify(paymentRef, job.applicationFee);
-      if (!result.verified) throw new Error(result.message || 'Payment verify হয়নি');
+      const MODE = process.env.PAYMENT_MODE || 'mock';
+      
+      if (MODE === 'mock') {
+        // Development: skip payment, mark as paid
+        paymentRef = `MOCK-${Date.now()}`;
+      } else {
+        if (!paymentRef) throw new Error(`এই job এ apply করতে ৳${job.applicationFee} fee দিতে হবে`);
+        const result = await paymentService.verify(paymentRef, job.applicationFee);
+        if (!result.verified) throw new Error(result.message || 'Payment verify হয়নি');
+      }
     }
 
     // CV type check — PDF only (professional standard)
@@ -123,10 +129,10 @@ export class CareerService {
     const application = await prisma.jobApplication.create({
       data: {
         jobId, userId,
-        cvPath,                                   // path, not URL
+        cvPath,
         paymentRef:  paymentRef || null,
-        feeStatus:   job.applicationFee > 0 ? 'paid' : 'free',
-        status:      'PENDING',
+        feeStatus:   job.applicationFee > 0 ? 'VERIFIED' : 'FREE',
+        status:      'SUBMITTED',
       },
     });
     applicationId = application.id;
@@ -180,6 +186,65 @@ export class CareerService {
   }
 
   // ── ADMIN: CREATE JOB ─────────────────────────────────────────────────
+    // ── ADMIN: PENDING APPLICATIONS (scoped) ──────
+  async getPendingApplications(adminId: string) {
+    const admin = await prisma.user.findUnique({
+      where: { id: adminId }, select: { role: true },
+    });
+    if (!['SUPER_ADMIN', 'LOCAL_ADMIN'].includes(admin?.role || '')) {
+      throw new Error('Admin access দরকার');
+    }
+
+    const where: any = { status: 'SUBMITTED' };
+    
+    // LOCAL_ADMIN scoping
+    if (admin?.role === 'LOCAL_ADMIN') {
+      const adminOrg = await prisma.organization.findFirst({ where: { adminId } });
+      if (!adminOrg) throw new Error('Organization পাওয়া যায়নি');
+      where.job = { createdBy: adminId };
+    }
+
+    return prisma.jobApplication.findMany({
+      where,
+      select: {
+        id: true, status: true, feeStatus: true, reviewNote: true, createdAt: true,
+        user: { select: { id: true, name: true, email: true, phone: true } },
+        job: { select: { id: true, title: true, department: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  // ── ADMIN: CV Presigned URL (5 min expiry) ────
+  async getCvPresignedUrlAdmin(applicationId: string, adminId: string) {
+    const admin = await prisma.user.findUnique({
+      where: { id: adminId }, select: { role: true },
+    });
+    if (!['SUPER_ADMIN', 'LOCAL_ADMIN'].includes(admin?.role || '')) {
+      throw new Error('Admin access দরকার');
+    }
+
+    const app = await prisma.jobApplication.findUnique({
+      where: { id: applicationId },
+    });
+    if (!app) throw new Error('Application পাওয়া যায়নি');
+
+    // LOCAL_ADMIN scoping
+    if (admin?.role === 'LOCAL_ADMIN') {
+      const job = await prisma.jobPost.findUnique({ where: { id: app.jobId } });
+      if (job?.createdBy !== adminId) throw new Error('Permission নেই');
+    }
+
+    // ৫ মিনিট expiry
+    const url = await minioClient.presignedGetObject(
+      BUCKET,
+      app.cvPath,
+      5 * 60 // 5 minutes
+    );
+
+    return { url, expiresIn: '5 minutes' };
+  }
+  
   async createJob(adminId: string, data: {
     title: string; department: string; location: string;
     jobType: string; description: string; requirements: string;
@@ -206,8 +271,17 @@ export class CareerService {
     status?: string; deadline?: string;
     title?: string; description?: string;
   }) {
-    const job = await prisma.jobPost.findFirst({ where: { id: jobId, createdBy: adminId } });
-    if (!job) throw new Error('Job পাওয়া যায়নি বা permission নেই');
+    const admin = await prisma.user.findUnique({
+      where: { id: adminId }, select: { role: true },
+    });
+    
+    const job = await prisma.jobPost.findUnique({ where: { id: jobId } });
+    if (!job) throw new Error('Job পাওয়া যায়নি');
+    
+    // SUPER_ADMIN can edit any job, LOCAL_ADMIN only own jobs
+    if (admin?.role !== 'SUPER_ADMIN' && job.createdBy !== adminId) {
+      throw new Error('Permission নেই');
+    }
 
     return prisma.jobPost.update({
       where: { id: jobId },
@@ -227,12 +301,19 @@ export class CareerService {
       throw new Error('Admin access দরকার');
     }
 
+    // LOCAL_ADMIN scoping - only own org's jobs
+    if (admin?.role === 'LOCAL_ADMIN') {
+      const adminOrg = await prisma.organization.findFirst({ where: { adminId } });
+      if (!adminOrg || job.createdBy !== adminId) {
+        throw new Error('Permission নেই');
+      }
+    }
+
     return prisma.jobApplication.findMany({
       where:   { jobId },
       select: {
         id: true, status: true, feeStatus: true, reviewNote: true, createdAt: true,
         user: { select: { id: true, name: true, email: true, phone: true } },
-        // cvPath নয় — presigned URL endpoint আছে
       },
       orderBy: { createdAt: 'asc' },
     });
@@ -251,7 +332,7 @@ export class CareerService {
       include: { job: true },
     });
     if (!app) throw new Error('Application পাওয়া যায়নি');
-    if (app.status !== 'PENDING') throw new Error('Already reviewed');
+    if (app.status !== 'SUBMITTED') throw new Error('Already reviewed');
 
     await prisma.jobApplication.update({
       where: { id: applicationId },
@@ -285,5 +366,7 @@ export class CareerService {
     });
   }
 }
+
+
 
 export const careerService = new CareerService();

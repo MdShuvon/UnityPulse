@@ -1,14 +1,13 @@
 import { z } from 'zod';
 
 export const createTaskSchema = z.object({
-  title:       z.string().min(3, 'কমপক্ষে ৩ অক্ষর'),
-  description: z.string().min(10, 'কমপক্ষে ১০ অক্ষর'),
-  date: z.string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Format: YYYY-MM-DD')
-    .refine(d => new Date(d) >= new Date(new Date().toISOString().split('T')[0]),
-      'অতীতের তারিখ দেওয়া যাবে না'  // Fix 3: Zod level এও check
-    ),
-  pointValue: z.number().int().min(1).max(100).optional(),
+  title:       z.string().min(3, 'কমপক্ষে ৩ অক্ষর').max(100, 'সর্বোচ্চ ১০০ অক্ষর'),
+  description: z.string().min(20, 'কমপক্ষে ২০ অক্ষর'),
+  proofType:   z.enum(['PHOTO', 'TEXT', 'BOTH']).default('PHOTO'),
+  pointValue:  z.number().int().min(1).max(500),
+  deadline:    z.string().nullable().optional(),
+  date:        z.string().optional(),
+  orgId:       z.string().nullable().optional(), // SUPER_ADMIN-এর জন্য, LOCAL_ADMIN backend-এ override হবে
 });
 
 export const reviewSubmissionSchema = z.object({

@@ -1,7 +1,7 @@
 import { FastifyInstance }    from 'fastify';
 import { careerService }       from '../../services/careerService';
 import { requireAdmin }        from '../../middleware/authGuard';
-import { createJobSchema, updateJobSchema, reviewApplicationSchema } from '../../schemas/careerSchema';
+import { createJobSchema, updateJobSchema } from '../../schemas/careerSchema';
 
 export async function adminCareerRoutes(app: FastifyInstance) {
 
@@ -27,14 +27,41 @@ export async function adminCareerRoutes(app: FastifyInstance) {
     return reply.send(await careerService.getJobApplications((req.params as any).id, (req.session as any).userId));
   });
 
-  // GET /admin/career/applications/:id/cv — presigned URL (Fix 5)
-  app.get('/admin/career/applications/:id/cv', { preHandler: requireAdmin }, async (req, reply) => {
-    return reply.send(await careerService.getCvPresignedUrl((req.params as any).id, (req.session as any).userId));
-  });
+  // GET /admin/career/applications — pending applications (scoped)
+  app.get('/admin/career/applications',
+    { preHandler: requireAdmin },
+    async (req, reply) => {
+      const adminId = (req.session as any).userId;
+      const applications = await careerService.getPendingApplications(adminId);
+      return reply.send(applications);
+    }
+  );
 
-  // PATCH /admin/career/applications/:id — accept/reject (Fix 6)
-  app.patch('/admin/career/applications/:id', { preHandler: requireAdmin }, async (req, reply) => {
-    const { action, note } = reviewApplicationSchema.parse(req.body);
-    return reply.send(await careerService.reviewApplication((req.session as any).userId, (req.params as any).id, action, note));
-  });
+  // GET /admin/career/applications/:id/cv — presigned CV URL (5 min expiry)
+  app.get('/admin/career/applications/:id/cv',
+    { preHandler: requireAdmin },
+    async (req, reply) => {
+      const adminId = (req.session as any).userId;
+      const { id } = req.params as any;
+      const result = await careerService.getCvPresignedUrlAdmin(id, adminId);
+      return reply.send(result);
+    }
+  );
+
+  // POST /admin/career/applications/:id/review — accept/reject
+  app.post('/admin/career/applications/:id/review',
+    { preHandler: requireAdmin },
+    async (req, reply) => {
+      const adminId = (req.session as any).userId;
+      const { id } = req.params as any;
+      const { action, note } = req.body as any;
+      
+      if (action === 'REJECTED' && (!note || !note.trim())) {
+        return reply.code(400).send({ error: 'Reject এর কারণ লিখুন' });
+      }
+      
+      const result = await careerService.reviewApplication(adminId, id, action, note);
+      return reply.send(result);
+    }
+  );
 }

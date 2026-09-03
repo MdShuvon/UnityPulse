@@ -6,19 +6,24 @@ export class ProfileService {
 
   // Profile update
   async update(userId: string, data: {
-    bio?:         string;
-    dateOfBirth?: string;
-    gender?:      string;
-    address?:     string;
-    occupation?:  string;
+    bio?:           string | null;
+    dateOfBirth?:   string | null;
+    gender?:        string | null;
+    address?:       string | null;
+    occupation?:    string | null;
+    profilePhoto?:  string | null;
   }) {
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
-        ...data,
+        bio: data.bio !== undefined ? data.bio : undefined,
         dateOfBirth: data.dateOfBirth
           ? new Date(data.dateOfBirth)
-          : undefined,
+          : data.dateOfBirth === null ? null : undefined,
+        gender: data.gender !== undefined ? data.gender : undefined,
+        address: data.address !== undefined ? data.address : undefined,
+        occupation: data.occupation !== undefined ? data.occupation : undefined,
+        profilePhoto: data.profilePhoto !== undefined ? data.profilePhoto : undefined,
       },
       select: {
         id: true, name: true, email: true, bio: true,
@@ -32,7 +37,8 @@ export class ProfileService {
 
   // Profile photo upload
   async uploadPhoto(userId: string, file: MultipartFile) {
-    const path = await fileService.upload(file, 'post');
+    // Use 'documents' folder for profile photos (no compression)
+    const path = await fileService.upload(file, 'documents');
     const url  = fileService.getUrl(path);
 
     await prisma.user.update({
@@ -98,6 +104,78 @@ export class ProfileService {
     if (privacy.gender     !== false) result.gender     = user.gender;
 
     return result;
+  }
+    // ── PUBLIC POSTS (only PUBLIC visibility) ──────
+  async getPublicPosts(userId: string, limit: number, page: number) {
+    const offset = (page - 1) * limit;
+    
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where: {
+          userId,
+          visibility: 'PUBLIC',
+          isDeleted: false,
+          isHidden: false,
+        },
+        include: {
+          user: { select: { id: true, name: true, profilePhoto: true } },
+          _count: { select: { likes: true, comments: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: offset,
+        take: limit,
+      }),
+      prisma.post.count({
+        where: {
+          userId,
+          visibility: 'PUBLIC',
+          isDeleted: false,
+          isHidden: false,
+        },
+      }),
+    ]);
+
+    return { data: posts, pagination: { page, limit, total, hasMore: offset + posts.length < total } };
+  }
+
+  // ── FOLLOW/UNFOLLOW ────────────────────────────
+  async toggleFollow(followerId: string, followingId: string) {
+    if (followerId === followingId) {
+      throw new Error('নিজেকে follow করা যাবে না');
+    }
+
+    const existing = await prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId, followingId } },
+    });
+
+    if (existing) {
+      await prisma.follow.delete({
+        where: { followerId_followingId: { followerId, followingId } },
+      });
+      return { following: false };
+    }
+
+    await prisma.follow.create({
+      data: { followerId, followingId },
+    });
+    return { following: true };
+  }
+
+  // ── IS FOLLOWING CHECK ─────────────────────────
+  async isFollowing(followerId: string, followingId: string): Promise<boolean> {
+    const follow = await prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId, followingId } },
+    });
+    return !!follow;
+  }
+
+  // ── FOLLOW COUNTS ──────────────────────────────
+  async getFollowCounts(userId: string) {
+    const [followers, following] = await Promise.all([
+      prisma.follow.count({ where: { followingId: userId } }),
+      prisma.follow.count({ where: { followerId: userId } }),
+    ]);
+    return { followers, following };
   }
 }
 
