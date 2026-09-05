@@ -102,6 +102,23 @@ model OrgMembership {
 }
 
 // ─── DONATION ────────────────────────────────────
+model Cause {
+  id           String      @id @default(cuid())
+  title        String
+  story        String
+  coverImage   String?
+  isFeatured   Boolean     @default(false)
+  status       String      @default("ACTIVE")
+  createdBy    String
+  createdAt    DateTime    @default(now())
+
+  projects     DonationProject[]
+  joinRequests CauseJoinRequest[]
+  faqs         FaqItem[]
+
+  @@index([isFeatured, status])
+}
+
 model DonationProject {
   id              String    @id @default(cuid())
   title           String
@@ -114,10 +131,46 @@ model DonationProject {
   createdBy       String
   createdAt       DateTime  @default(now())
   coverImage      String?
+  causeId         String?
 
-  org       Organization     @relation(fields: [orgId], references: [id])
-  donations Donation[]
-  expenses  ProjectExpense[]
+  org           Organization       @relation(fields: [orgId], references: [id])
+  cause         Cause?             @relation(fields: [causeId], references: [id])
+  donations     Donation[]
+  expenses      ProjectExpense[]
+  joinRequests  CauseJoinRequest[]
+
+  @@index([causeId])
+}
+
+model FaqItem {
+  id        String  @id @default(cuid())
+  causeId   String?
+  question  String
+  answer    String
+  order     Int     @default(0)
+
+  cause     Cause?  @relation(fields: [causeId], references: [id])
+
+  @@index([causeId])
+}
+
+model CauseJoinRequest {
+  id          String    @id @default(cuid())
+  causeId     String
+  projectId   String
+  requestedBy String
+  note        String?
+  status      String    @default("PENDING")
+  reviewNote  String?
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  cause       Cause            @relation(fields: [causeId], references: [id])
+  project     DonationProject  @relation(fields: [projectId], references: [id])
+
+  @@index([causeId, status])
+  @@index([projectId])
 }
 
 model ProjectExpense {

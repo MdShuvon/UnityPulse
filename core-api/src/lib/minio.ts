@@ -21,7 +21,7 @@ export async function ensureBucket() {
 
 // File এর public URL বানাও
 export function getFileUrl(path: string): string {
-  return `http://${process.env.MINIO_ENDPOINT || 'localhost'}:${
-    process.env.MINIO_PORT || 9000
-  }/${BUCKET}/${path}`;
+  const endpoint = process.env.MINIO_ENDPOINT || 'localhost';
+  const port = process.env.MINIO_PORT || '9000';
+  return `http://${endpoint}:${port}/${BUCKET}/${path}`;
 }

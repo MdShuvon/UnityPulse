@@ -114,9 +114,13 @@
   :global(*) { margin: 0; padding: 0; box-sizing: border-box; }
   .status-page { min-height: 100vh; font-family: 'DM Sans', sans-serif; background: #F6F4EE; color: #16231F; }
   .bangla { font-family: 'Hind Siliguri', sans-serif; }
-  
+  @media (max-width: 768px) {
+    .bangla {
+      font-size: 14px;
+    }
+  }
 
-  .main-content { max-width: 480px; margin: 0 auto; padding: 2rem 1rem; }
+  .main-content { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; }
   .status-card { text-align: center; padding: 40px 20px; background: white; border: 1px solid #E4EDE9; border-radius: 16px; }
   
   .spinner { width: 36px; height: 36px; border: 3px solid #E4EDE9; border-top-color: #1F5D50; border-radius: 50%; margin: 0 auto 16px; animation: spin 1s linear infinite; }

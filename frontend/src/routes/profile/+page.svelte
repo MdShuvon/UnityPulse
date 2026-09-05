@@ -1,7 +1,7 @@
 ﻿<!-- src/routes/profile/+page.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
-  import { page as pageStore } from '$app/stores';
+  import { page as pageStore } from "$app/stores";
   import { goto } from "$app/navigation";
   import {
     Loader2,
@@ -25,7 +25,7 @@
     Plus,
     MoreVertical,
     Reply,
-    ChevronLeft
+    ChevronLeft,
   } from "lucide-svelte";
 
   let isLoading = $state(true);
@@ -228,7 +228,7 @@
         method: "POST",
         credentials: "include",
       });
-      window.location.href = '/';
+      window.location.href = "/";
     } catch (err) {
       console.error(err);
       alert("Logout-এ সমস্যা হয়েছে");
@@ -590,9 +590,21 @@
     {:else if user}
       <div class="profile-card">
         <div class="avatar-section">
-          <div class="avatar-wrap" onclick={() => { showPhotoPreview = true; }} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && (showPhotoPreview = true)}>
+          <div
+            class="avatar-wrap"
+            onclick={() => {
+              showPhotoPreview = true;
+            }}
+            role="button"
+            tabindex="0"
+            onkeydown={(e) => e.key === "Enter" && (showPhotoPreview = true)}
+          >
             {#if user.profilePhoto}
-              <img src={user.profilePhoto} alt={user.name} class="profile-photo-img" />
+              <img
+                src={user.profilePhoto}
+                alt={user.name}
+                class="profile-photo-img"
+              />
             {:else}
               <div class="avatar-circle">{getInitials(user.name)}</div>
             {/if}
@@ -601,14 +613,27 @@
         <div class="profile-name-block">
           <h1 class="profile-name">{user.name}</h1>
           <p class="profile-role bangla">
-            {user.role === "SUPER_ADMIN" ? "সুপার অ্যাডমিন" : user.role === "LOCAL_ADMIN" ? "লোকাল অ্যাডমিন" : "কমিউনিটি ভলান্টিয়ার"}
+            {user.role === "SUPER_ADMIN"
+              ? "সুপার অ্যাডমিন"
+              : user.role === "LOCAL_ADMIN"
+                ? "লোকাল অ্যাডমিন"
+                : "কমিউনিটি ভলান্টিয়ার"}
           </p>
-          <p class="profile-loc"><MapPin size={14} /> {user.address || "ঠিকানা যোগ করা হয়নি"}</p>
-          <p class="profile-bio bangla">{user.bio || "এখনো কোনো বায়ো যোগ করা হয়নি।"}</p>
+          <p class="profile-loc">
+            <MapPin size={14} />
+            {user.address || "ঠিকানা যোগ করা হয়নি"}
+          </p>
+          <p class="profile-bio bangla">
+            {user.bio || "এখনো কোনো বায়ো যোগ করা হয়নি।"}
+          </p>
         </div>
         <div class="profile-actions">
-          <button class="btn btn-primary" onclick={() => (showComposer = !showComposer)}>
-            <Plus size={16} /> {showComposer ? "বাতিল" : "পোস্ট তৈরি করুন"}
+          <button
+            class="btn btn-primary"
+            onclick={() => (showComposer = !showComposer)}
+          >
+            <Plus size={16} />
+            {showComposer ? "বাতিল" : "পোস্ট তৈরি করুন"}
           </button>
           <button class="btn btn-secondary" onclick={startEditProfile}>
             <Pencil size={16} /> Edit Profile
@@ -618,21 +643,40 @@
           </button>
         </div>
         <div class="tabs">
-          <button class="tab" class:active={activeTab === "posts"} onclick={() => (activeTab = "posts")}>পোস্ট</button>
-          <button class="tab" class:active={activeTab === "about"} onclick={() => (activeTab = "about")}>তথ্য</button>
-          <button class="tab" class:active={activeTab === "activity"} onclick={() => (activeTab = "activity")}>কার্যক্রম</button>
+          <button
+            class="tab"
+            class:active={activeTab === "posts"}
+            onclick={() => (activeTab = "posts")}>পোস্ট</button
+          >
+          <button
+            class="tab"
+            class:active={activeTab === "about"}
+            onclick={() => (activeTab = "about")}>তথ্য</button
+          >
+          <button
+            class="tab"
+            class:active={activeTab === "activity"}
+            onclick={() => (activeTab = "activity")}>কার্যক্রম</button
+          >
         </div>
       </div>
 
       {#if showComposer}
         <div class="composer-modal">
-          <textarea class="composer-input bangla" placeholder="কী মনে করছেন?" bind:value={postContent} rows="4"></textarea>
+          <textarea
+            class="composer-input bangla"
+            placeholder="কী মনে করছেন?"
+            bind:value={postContent}
+            rows="4"
+          ></textarea>
           {#if photoPreviews.length > 0}
             <div class="photo-previews">
               {#each photoPreviews as preview, i}
                 <div class="preview-item">
                   <img src={preview} alt="preview" />
-                  <button class="remove-photo" onclick={() => removePhoto(i)}><X size={14} /></button>
+                  <button class="remove-photo" onclick={() => removePhoto(i)}
+                    ><X size={14} /></button
+                  >
                 </div>
               {/each}
             </div>
@@ -640,14 +684,25 @@
           <div class="composer-actions">
             <label class="photo-upload-btn">
               <Image size={18} /> ছবি যোগ করুন
-              <input type="file" accept="image/jpeg,image/png,image/webp" multiple onchange={handlePhotoSelect} style="display:none;" />
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onchange={handlePhotoSelect}
+                style="display:none;"
+              />
             </label>
             <select bind:value={postVisibility} class="visibility-select">
               <option value="PUBLIC">🌍 Public</option>
               <option value="ORG_ONLY">🏢 Org Only</option>
               <option value="MEMBERS_ONLY">👥 Members Only</option>
             </select>
-            <button class="btn btn-primary" onclick={createPost} disabled={isSubmitting || (!postContent.trim() && selectedPhotos.length === 0)}>
+            <button
+              class="btn btn-primary"
+              onclick={createPost}
+              disabled={isSubmitting ||
+                (!postContent.trim() && selectedPhotos.length === 0)}
+            >
               {isSubmitting ? "পোস্ট হচ্ছে..." : "পোস্ট করুন"}
             </button>
           </div>
@@ -664,15 +719,24 @@
                 <span class="post-time mono">{timeAgo(post.createdAt)}</span>
               </div>
               <div class="menu-container">
-                <button class="three-dot-btn" onclick={() => togglePostMenu(post.id)}>
+                <button
+                  class="three-dot-btn"
+                  onclick={() => togglePostMenu(post.id)}
+                >
                   <MoreVertical size={18} />
                 </button>
                 {#if openPostMenuId === post.id}
                   <div class="dropdown-menu">
-                    <button class="dropdown-item" onclick={() => startEditPost(post)}>
+                    <button
+                      class="dropdown-item"
+                      onclick={() => startEditPost(post)}
+                    >
                       <Pencil size={14} /> Edit
                     </button>
-                    <button class="dropdown-item delete-item" onclick={() => deletePost(post.id)}>
+                    <button
+                      class="dropdown-item delete-item"
+                      onclick={() => deletePost(post.id)}
+                    >
                       <Trash2 size={14} /> Delete
                     </button>
                   </div>
@@ -681,19 +745,41 @@
             </div>
             {#if isEditingPost && editingPostId === post.id}
               <div class="edit-post-section">
-                <textarea class="edit-post-input bangla" bind:value={editingPostText} rows="3"></textarea>
+                <textarea
+                  class="edit-post-input bangla"
+                  bind:value={editingPostText}
+                  rows="3"
+                ></textarea>
                 <div class="edit-post-actions">
-                  <button class="btn btn-primary" onclick={saveEditPost}>Save</button>
-                  <button class="btn btn-secondary" onclick={() => { isEditingPost = false; editingPostId = null; }}>Cancel</button>
+                  <button class="btn btn-primary" onclick={saveEditPost}
+                    >Save</button
+                  >
+                  <button
+                    class="btn btn-secondary"
+                    onclick={() => {
+                      isEditingPost = false;
+                      editingPostId = null;
+                    }}>Cancel</button
+                  >
                 </div>
               </div>
             {:else if post.content}
               <p class="post-body bangla">{decodeHtml(post.content)}</p>
             {/if}
             {#if post.photos?.length > 0}
-              <div class="post-photos-grid" class:single-photo={post.photos.length === 1}>
+              <div
+                class="post-photos-grid"
+                class:single-photo={post.photos.length === 1}
+              >
                 {#each post.photos as photo}
-                  <img src={photo} alt="post" class="post-photo-img" width="300" height="300" loading="lazy" />
+                  <img
+                    src={photo}
+                    alt="post"
+                    class="post-photo-img"
+                    width="300"
+                    height="300"
+                    loading="lazy"
+                  />
                 {/each}
               </div>
             {/if}
@@ -702,11 +788,22 @@
               <span class="mono">{post._count?.comments || 0} comments</span>
             </div>
             <div class="post-actions">
-              <button class="post-action" class:liked={isPostLiked(post.id)} onclick={() => toggleLike(post.id)}>
-                <Heart size={16} fill={isPostLiked(post.id) ? "#B8503F" : "none"} /> Like
+              <button
+                class="post-action"
+                class:liked={isPostLiked(post.id)}
+                onclick={() => toggleLike(post.id)}
+              >
+                <Heart
+                  size={16}
+                  fill={isPostLiked(post.id) ? "#B8503F" : "none"}
+                /> Like
               </button>
-              <button class="post-action" onclick={() => toggleComments(post.id)}>
-                <MessageCircle size={16} /> Comment ({post._count?.comments || 0})
+              <button
+                class="post-action"
+                onclick={() => toggleComments(post.id)}
+              >
+                <MessageCircle size={16} /> Comment ({post._count?.comments ||
+                  0})
               </button>
               <button class="post-action" onclick={() => sharePost(post.id)}>
                 <Share2 size={16} /> Share
@@ -716,44 +813,102 @@
               <div class="comments-section">
                 <div class="comment-input-row">
                   <div class="mini-avatar-sm">{getInitials(user.name)}</div>
-                  <textarea class="comment-textarea bangla" placeholder="কমেন্ট লিখুন..." bind:value={commentText[post.id]} rows="1" onkeydown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitComment(post.id); } }}></textarea>
-                  <button class="comment-send-btn" onclick={() => submitComment(post.id)}>
+                  <textarea
+                    class="comment-textarea bangla"
+                    placeholder="কমেন্ট লিখুন..."
+                    bind:value={commentText[post.id]}
+                    rows="1"
+                    onkeydown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        submitComment(post.id);
+                      }
+                    }}
+                  ></textarea>
+                  <button
+                    class="comment-send-btn"
+                    onclick={() => submitComment(post.id)}
+                  >
                     <Send size={14} />
                   </button>
                 </div>
                 {#if comments[post.id]?.length > 0}
                   {#each comments[post.id] as comment}
                     <div class="comment-row">
-                      <div class="mini-avatar-sm">{getInitials(comment.user?.name || "?")}</div>
+                      <div class="mini-avatar-sm">
+                        {getInitials(comment.user?.name || "?")}
+                      </div>
                       <div class="comment-bubble">
                         <span class="comment-name">{comment.user?.name}</span>
                         {#if editingCommentId === comment.id}
-                          <textarea class="edit-input bangla" bind:value={editingCommentText} rows="2"></textarea>
+                          <textarea
+                            class="edit-input bangla"
+                            bind:value={editingCommentText}
+                            rows="2"
+                          ></textarea>
                           <div class="edit-actions">
-                            <button class="save-edit-btn" onclick={() => saveEditComment(post.id, comment.id)}>Save</button>
-                            <button class="cancel-edit-btn" onclick={() => { editingCommentId = null; }}>Cancel</button>
+                            <button
+                              class="save-edit-btn"
+                              onclick={() =>
+                                saveEditComment(post.id, comment.id)}
+                              >Save</button
+                            >
+                            <button
+                              class="cancel-edit-btn"
+                              onclick={() => {
+                                editingCommentId = null;
+                              }}>Cancel</button
+                            >
                           </div>
                         {:else}
-                          <p class="comment-text bangla" style="white-space: pre-wrap;">{decodeHtml(comment.content)}</p>
+                          <p
+                            class="comment-text bangla"
+                            style="white-space: pre-wrap;"
+                          >
+                            {decodeHtml(comment.content)}
+                          </p>
                         {/if}
                         <div class="comment-actions-row">
-                          <button class="comment-action" class:liked={isCommentLiked(comment.id)} onclick={() => toggleCommentLike(post.id, comment.id)}>
-                            <Heart size={12} fill={isCommentLiked(comment.id) ? "#B8503F" : "none"} /> Like ({getCommentLikeCount(comment)})
+                          <button
+                            class="comment-action"
+                            class:liked={isCommentLiked(comment.id)}
+                            onclick={() =>
+                              toggleCommentLike(post.id, comment.id)}
+                          >
+                            <Heart
+                              size={12}
+                              fill={isCommentLiked(comment.id)
+                                ? "#B8503F"
+                                : "none"}
+                            /> Like ({getCommentLikeCount(comment)})
                           </button>
-                          <button class="comment-action" onclick={() => startReply(post.id, comment)}>
+                          <button
+                            class="comment-action"
+                            onclick={() => startReply(post.id, comment)}
+                          >
                             <Reply size={12} /> Reply
                           </button>
                           {#if comment.user?.id === user.id}
                             <div class="comment-menu-wrapper">
-                              <button class="comment-three-dot" onclick={() => toggleCommentMenu(comment.id)}>
+                              <button
+                                class="comment-three-dot"
+                                onclick={() => toggleCommentMenu(comment.id)}
+                              >
                                 <MoreVertical size={14} />
                               </button>
                               {#if openCommentMenuId === comment.id}
                                 <div class="comment-dropdown-menu">
-                                  <button class="dropdown-item" onclick={() => startEditComment(comment)}>
+                                  <button
+                                    class="dropdown-item"
+                                    onclick={() => startEditComment(comment)}
+                                  >
                                     <Pencil size={12} /> Edit
                                   </button>
-                                  <button class="dropdown-item delete-item" onclick={() => deleteComment(post.id, comment.id)}>
+                                  <button
+                                    class="dropdown-item delete-item"
+                                    onclick={() =>
+                                      deleteComment(post.id, comment.id)}
+                                  >
                                     <Trash2 size={12} /> Delete
                                   </button>
                                 </div>
@@ -763,12 +918,31 @@
                         </div>
                         {#if showReplyInput[post.id] && replyTo[post.id]?.id === comment.id}
                           <div class="reply-input-row">
-                            <div class="mini-avatar-sm">{getInitials(user.name)}</div>
-                            <textarea class="comment-textarea bangla" placeholder="রিপ্লাই লিখুন..." bind:value={replyText[post.id]} rows="1" onkeydown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitReply(post.id); } }}></textarea>
-                            <button class="comment-send-btn" onclick={() => submitReply(post.id)}>
+                            <div class="mini-avatar-sm">
+                              {getInitials(user.name)}
+                            </div>
+                            <textarea
+                              class="comment-textarea bangla"
+                              placeholder="রিপ্লাই লিখুন..."
+                              bind:value={replyText[post.id]}
+                              rows="1"
+                              onkeydown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  submitReply(post.id);
+                                }
+                              }}
+                            ></textarea>
+                            <button
+                              class="comment-send-btn"
+                              onclick={() => submitReply(post.id)}
+                            >
                               <Send size={14} />
                             </button>
-                            <button class="cancel-reply-btn" onclick={() => cancelReply(post.id)}>
+                            <button
+                              class="cancel-reply-btn"
+                              onclick={() => cancelReply(post.id)}
+                            >
                               <X size={14} />
                             </button>
                           </div>
@@ -777,36 +951,87 @@
                           <div class="nested-replies">
                             {#each comment.replies as reply}
                               <div class="reply-row">
-                                <div class="mini-avatar-sm">{getInitials(reply.user?.name || "?")}</div>
+                                <div class="mini-avatar-sm">
+                                  {getInitials(reply.user?.name || "?")}
+                                </div>
                                 <div class="comment-bubble reply-bubble">
-                                  <span class="comment-name">{reply.user?.name}</span>
+                                  <span class="comment-name"
+                                    >{reply.user?.name}</span
+                                  >
                                   {#if editingCommentId === reply.id}
-                                    <textarea class="edit-input bangla" bind:value={editingCommentText} rows="2"></textarea>
+                                    <textarea
+                                      class="edit-input bangla"
+                                      bind:value={editingCommentText}
+                                      rows="2"
+                                    ></textarea>
                                     <div class="edit-actions">
-                                      <button class="save-edit-btn" onclick={() => saveEditComment(post.id, reply.id)}>Save</button>
-                                      <button class="cancel-edit-btn" onclick={() => { editingCommentId = null; }}>Cancel</button>
+                                      <button
+                                        class="save-edit-btn"
+                                        onclick={() =>
+                                          saveEditComment(post.id, reply.id)}
+                                        >Save</button
+                                      >
+                                      <button
+                                        class="cancel-edit-btn"
+                                        onclick={() => {
+                                          editingCommentId = null;
+                                        }}>Cancel</button
+                                      >
                                     </div>
                                   {:else}
-                                    <p class="comment-text bangla" style="white-space: pre-wrap;">{decodeHtml(reply.content)}</p>
+                                    <p
+                                      class="comment-text bangla"
+                                      style="white-space: pre-wrap;"
+                                    >
+                                      {decodeHtml(reply.content)}
+                                    </p>
                                   {/if}
                                   <div class="comment-actions-row">
-                                    <button class="comment-action" class:liked={isCommentLiked(reply.id)} onclick={() => toggleCommentLike(post.id, reply.id)}>
-                                      <Heart size={12} fill={isCommentLiked(reply.id) ? "#B8503F" : "none"} /> Like ({getCommentLikeCount(reply)})
+                                    <button
+                                      class="comment-action"
+                                      class:liked={isCommentLiked(reply.id)}
+                                      onclick={() =>
+                                        toggleCommentLike(post.id, reply.id)}
+                                    >
+                                      <Heart
+                                        size={12}
+                                        fill={isCommentLiked(reply.id)
+                                          ? "#B8503F"
+                                          : "none"}
+                                      /> Like ({getCommentLikeCount(reply)})
                                     </button>
-                                    <button class="comment-action" onclick={() => startReply(post.id, reply)}>
+                                    <button
+                                      class="comment-action"
+                                      onclick={() => startReply(post.id, reply)}
+                                    >
                                       <Reply size={12} /> Reply
                                     </button>
                                     {#if reply.user?.id === user.id}
                                       <div class="comment-menu-wrapper">
-                                        <button class="comment-three-dot" onclick={() => toggleCommentMenu(reply.id)}>
+                                        <button
+                                          class="comment-three-dot"
+                                          onclick={() =>
+                                            toggleCommentMenu(reply.id)}
+                                        >
                                           <MoreVertical size={14} />
                                         </button>
                                         {#if openCommentMenuId === reply.id}
                                           <div class="comment-dropdown-menu">
-                                            <button class="dropdown-item" onclick={() => startEditComment(reply)}>
+                                            <button
+                                              class="dropdown-item"
+                                              onclick={() =>
+                                                startEditComment(reply)}
+                                            >
                                               <Pencil size={12} /> Edit
                                             </button>
-                                            <button class="dropdown-item delete-item" onclick={() => deleteComment(post.id, reply.id)}>
+                                            <button
+                                              class="dropdown-item delete-item"
+                                              onclick={() =>
+                                                deleteComment(
+                                                  post.id,
+                                                  reply.id,
+                                                )}
+                                            >
                                               <Trash2 size={12} /> Delete
                                             </button>
                                           </div>
@@ -823,14 +1048,18 @@
                     </div>
                   {/each}
                 {:else}
-                  <p class="no-comments bangla">কোনো কমেন্ট নেই। প্রথম কমেন্ট করুন!</p>
+                  <p class="no-comments bangla">
+                    কোনো কমেন্ট নেই। প্রথম কমেন্ট করুন!
+                  </p>
                 {/if}
               </div>
             {/if}
           </div>
         {/each}
         {#if posts.length === 0}
-          <p class="empty-text bangla">এখনো কোনো পোস্ট নেই। প্রথম পোস্ট করুন!</p>
+          <p class="empty-text bangla">
+            এখনো কোনো পোস্ট নেই। প্রথম পোস্ট করুন!
+          </p>
         {/if}
       {:else if activeTab === "about"}
         <div class="about-card">
@@ -879,31 +1108,64 @@
   {#if showPhotoPreview}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="photo-preview-overlay" onclick={() => showPhotoPreview = false} onkeydown={(e) => e.key === 'Escape' && (showPhotoPreview = false)} role="dialog" tabindex="-1">
+    <div
+      class="photo-preview-overlay"
+      onclick={() => (showPhotoPreview = false)}
+      onkeydown={(e) => e.key === "Escape" && (showPhotoPreview = false)}
+      role="dialog"
+      tabindex="-1"
+    >
       <!-- svelte-ignore a11y_click_events_have_key_events -->
       <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <div class="photo-preview-container" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+      <div
+        class="photo-preview-container"
+        onclick={(e) => e.stopPropagation()}
+        onkeydown={(e) => e.stopPropagation()}
+      >
         {#if user.profilePhoto}
-          <img src={user.profilePhoto} alt={user.name} class="photo-preview-img" />
+          <img
+            src={user.profilePhoto}
+            alt={user.name}
+            class="photo-preview-img"
+          />
         {:else}
           <div class="preview-placeholder">
             <User size={48} />
           </div>
         {/if}
-        <button class="photo-preview-close" onclick={() => showPhotoPreview = false}>
+        <button
+          class="photo-preview-close"
+          onclick={() => (showPhotoPreview = false)}
+        >
           <X size={24} />
         </button>
         <div class="photo-preview-actions">
-          <button class="btn btn-primary" onclick={() => document.getElementById('profile-photo-input')?.click()}>
+          <button
+            class="btn btn-primary"
+            onclick={() =>
+              document.getElementById("profile-photo-input")?.click()}
+          >
             <Camera size={16} /> Change Photo
           </button>
           {#if user.profilePhoto}
-            <button class="btn btn-danger" onclick={() => { showPhotoPreview = false; deleteProfilePhoto(); }}>
+            <button
+              class="btn btn-danger"
+              onclick={() => {
+                showPhotoPreview = false;
+                deleteProfilePhoto();
+              }}
+            >
               <Trash2 size={16} /> Delete
             </button>
           {/if}
         </div>
-        <input id="profile-photo-input" type="file" accept="image/jpeg,image/png,image/webp" onchange={handleProfilePhotoUpload} style="display:none;" />
+        <input
+          id="profile-photo-input"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onchange={handleProfilePhotoUpload}
+          style="display:none;"
+        />
       </div>
     </div>
   {/if}
@@ -911,26 +1173,53 @@
   {#if isEditingProfile}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="modal-overlay" onclick={() => (isEditingProfile = false)} onkeydown={(e) => e.key === 'Escape' && (isEditingProfile = false)} role="dialog" tabindex="-1">
+    <div
+      class="modal-overlay"
+      onclick={() => (isEditingProfile = false)}
+      onkeydown={(e) => e.key === "Escape" && (isEditingProfile = false)}
+      role="dialog"
+      tabindex="-1"
+    >
       <!-- svelte-ignore a11y_click_events_have_key_events -->
       <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <div class="modal-content" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+      <div
+        class="modal-content"
+        onclick={(e) => e.stopPropagation()}
+        onkeydown={(e) => e.stopPropagation()}
+      >
         <h2 class="modal-title">✏️ প্রোফাইল এডিট করুন</h2>
         <div class="form-group">
           <label class="modal-label" for="edit-bio">বায়ো</label>
-          <textarea id="edit-bio" class="form-input bangla" rows="3" bind:value={editForm.bio}></textarea>
+          <textarea
+            id="edit-bio"
+            class="form-input bangla"
+            rows="3"
+            bind:value={editForm.bio}
+          ></textarea>
         </div>
         <div class="form-group">
           <label class="modal-label" for="edit-address">ঠিকানা</label>
-          <input id="edit-address" class="form-input bangla" bind:value={editForm.address} />
+          <input
+            id="edit-address"
+            class="form-input bangla"
+            bind:value={editForm.address}
+          />
         </div>
         <div class="form-group">
           <label class="modal-label" for="edit-occupation">পেশা</label>
-          <input id="edit-occupation" class="form-input bangla" bind:value={editForm.occupation} />
+          <input
+            id="edit-occupation"
+            class="form-input bangla"
+            bind:value={editForm.occupation}
+          />
         </div>
         <div class="form-group">
           <label class="modal-label" for="edit-gender">লিঙ্গ</label>
-          <select id="edit-gender" class="form-input" bind:value={editForm.gender}>
+          <select
+            id="edit-gender"
+            class="form-input"
+            bind:value={editForm.gender}
+          >
             <option value="">নির্বাচন করুন</option>
             <option value="male">পুরুষ</option>
             <option value="female">মহিলা</option>
@@ -939,11 +1228,19 @@
         </div>
         <div class="form-group">
           <label class="modal-label" for="edit-dob">জন্ম তারিখ</label>
-          <input id="edit-dob" type="date" class="form-input" bind:value={editForm.dateOfBirth} />
+          <input
+            id="edit-dob"
+            type="date"
+            class="form-input"
+            bind:value={editForm.dateOfBirth}
+          />
         </div>
         <div class="modal-actions">
           <button class="btn btn-primary" onclick={saveProfile}>Save</button>
-          <button class="btn btn-secondary" onclick={() => (isEditingProfile = false)}>Cancel</button>
+          <button
+            class="btn btn-secondary"
+            onclick={() => (isEditingProfile = false)}>Cancel</button
+          >
         </div>
       </div>
     </div>
@@ -953,23 +1250,33 @@
 <style>
   .profile-page {
     min-height: 100vh;
-    font-family: 'DM Sans', sans-serif;
-    background: #F6F4EE;
-    color: #16231F;
+    font-family: "DM Sans", sans-serif;
+    background: #f6f4ee;
+    color: #16231f;
   }
-  .bangla { font-family: 'Hind Siliguri', sans-serif; }
-  .mono { font-family: 'DM Mono', monospace; }
+  .bangla {
+    font-family: "Hind Siliguri", sans-serif;
+  }
+  .mono {
+    font-family: "DM Mono", monospace;
+  }
 
   .main-content {
-    max-width: 640px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 1.5rem 1rem;
+    padding: 1.5rem 2rem;
+  }
+  @media (max-width: 768px) {
+    .main-content {
+      max-width: 100%;
+      padding: 1rem;
+    }
   }
 
   .skeleton-profile {
     background: white;
     border-radius: 16px;
-    border: 1px solid #E4EDE9;
+    border: 1px solid #e4ede9;
     padding: 28px 24px;
     text-align: center;
   }
@@ -977,14 +1284,14 @@
     width: 96px;
     height: 96px;
     border-radius: 50%;
-    background: #E4EDE9;
+    background: #e4ede9;
     margin: 0 auto 14px;
     animation: pulse 1.5s ease-in-out infinite;
   }
   .skeleton-name {
     width: 200px;
     height: 22px;
-    background: #E4EDE9;
+    background: #e4ede9;
     border-radius: 4px;
     margin: 0 auto 8px;
     animation: pulse 1.5s ease-in-out infinite;
@@ -992,7 +1299,7 @@
   .skeleton-role {
     width: 150px;
     height: 14px;
-    background: #E4EDE9;
+    background: #e4ede9;
     border-radius: 4px;
     margin: 0 auto 12px;
     animation: pulse 1.5s ease-in-out infinite;
@@ -1000,7 +1307,7 @@
   .skeleton-bio {
     width: 280px;
     height: 14px;
-    background: #E4EDE9;
+    background: #e4ede9;
     border-radius: 4px;
     margin: 0 auto 16px;
     animation: pulse 1.5s ease-in-out infinite;
@@ -1012,23 +1319,29 @@
   }
   .skeleton-actions::before,
   .skeleton-actions::after {
-    content: '';
+    content: "";
     width: 120px;
     height: 38px;
-    background: #E4EDE9;
+    background: #e4ede9;
     border-radius: 10px;
     animation: pulse 1.5s ease-in-out infinite;
   }
   @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 1;
+    }
   }
 
   .profile-card {
     background: white;
     border-radius: 16px;
-    border: 1px solid #E4EDE9;
+    border: 1px solid #e4ede9;
     padding: 28px 24px 16px;
     position: relative;
   }
@@ -1049,35 +1362,41 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: linear-gradient(135deg, #1F5D50, #2E7A69);
+    background: linear-gradient(135deg, #1f5d50, #2e7a69);
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-family: 'Baloo Da 2', sans-serif;
+    font-family: "Baloo Da 2", sans-serif;
     font-size: 36px;
     font-weight: 700;
-    border: 4px solid #E9A23B;
+    border: 4px solid #e9a23b;
   }
   .profile-photo-img {
     width: 100%;
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 4px solid #E9A23B;
+    border: 4px solid #e9a23b;
   }
   /* photo-menu removed — preview has actions */
 
-  .profile-name-block { text-align: center; }
+  .profile-name-block {
+    text-align: center;
+  }
   .profile-name {
-    font-family: 'Baloo Da 2', sans-serif;
+    font-family: "Baloo Da 2", sans-serif;
     font-size: 22px;
     font-weight: 700;
   }
-  .profile-role { font-size: 13px; color: #5B675F; margin-top: 2px; }
+  .profile-role {
+    font-size: 13px;
+    color: #5b675f;
+    margin-top: 2px;
+  }
   .profile-loc {
     font-size: 13px;
-    color: #5B675F;
+    color: #5b675f;
     margin-top: 6px;
     display: flex;
     align-items: center;
@@ -1098,7 +1417,7 @@
     flex-wrap: wrap;
   }
   .btn {
-    font-family: 'DM Sans', sans-serif;
+    font-family: "DM Sans", sans-serif;
     font-size: 13.5px;
     font-weight: 500;
     padding: 9px 20px;
@@ -1109,21 +1428,31 @@
     align-items: center;
     gap: 6px;
   }
-  .btn-primary { background: #1F5D50; color: white; }
-  .btn-primary:hover { background: #153F36; }
+  .btn-primary {
+    background: #1f5d50;
+    color: white;
+  }
+  .btn-primary:hover {
+    background: #153f36;
+  }
   .btn-secondary {
     background: white;
-    color: #1F5D50;
-    border: 1px solid #1F5D50;
+    color: #1f5d50;
+    border: 1px solid #1f5d50;
   }
-  .logout-btn { color: #B8503F; border-color: #B8503F; }
-  .logout-btn:hover { background: #FDF0ED; }
+  .logout-btn {
+    color: #b8503f;
+    border-color: #b8503f;
+  }
+  .logout-btn:hover {
+    background: #fdf0ed;
+  }
 
   .tabs {
     display: flex;
     gap: 4px;
     margin-top: 22px;
-    border-bottom: 1px solid #E4EDE9;
+    border-bottom: 1px solid #e4ede9;
   }
   .tab {
     flex: 1;
@@ -1131,28 +1460,30 @@
     padding: 10px 6px;
     font-size: 14px;
     font-weight: 500;
-    color: #5B675F;
+    color: #5b675f;
     background: none;
     border: none;
     cursor: pointer;
     position: relative;
-    font-family: 'Hind Siliguri', sans-serif;
+    font-family: "Hind Siliguri", sans-serif;
   }
-  .tab.active { color: #1F5D50; }
+  .tab.active {
+    color: #1f5d50;
+  }
   .tab.active::after {
-    content: '';
+    content: "";
     position: absolute;
     left: 0;
     right: 0;
     bottom: -1px;
     height: 2.5px;
-    background: #E9A23B;
+    background: #e9a23b;
     border-radius: 2px;
   }
 
   .composer-modal {
     background: white;
-    border: 1px solid #E4EDE9;
+    border: 1px solid #e4ede9;
     border-radius: 16px;
     padding: 16px;
     margin-top: 16px;
@@ -1160,12 +1491,12 @@
   .composer-input {
     width: 100%;
     padding: 12px;
-    border: 1px solid #E4EDE9;
+    border: 1px solid #e4ede9;
     border-radius: 10px;
     font-size: 14px;
     resize: none;
     outline: none;
-    font-family: 'Hind Siliguri', sans-serif;
+    font-family: "Hind Siliguri", sans-serif;
   }
   .composer-actions {
     display: flex;
@@ -1177,7 +1508,7 @@
   }
   .visibility-select {
     padding: 8px 12px;
-    border: 1px solid #E4EDE9;
+    border: 1px solid #e4ede9;
     border-radius: 8px;
     font-size: 13px;
     outline: none;
@@ -1188,15 +1519,15 @@
     align-items: center;
     gap: 6px;
     padding: 8px 12px;
-    border: 1px solid #E4EDE9;
+    border: 1px solid #e4ede9;
     border-radius: 8px;
     cursor: pointer;
     font-size: 13px;
-    color: #5B675F;
+    color: #5b675f;
   }
   .photo-upload-btn:hover {
-    border-color: #1F5D50;
-    color: #1F5D50;
+    border-color: #1f5d50;
+    color: #1f5d50;
   }
   .photo-previews {
     display: grid;
@@ -1204,7 +1535,9 @@
     gap: 8px;
     margin-top: 12px;
   }
-  .preview-item { position: relative; }
+  .preview-item {
+    position: relative;
+  }
   .preview-item img {
     width: 100%;
     height: 100px;
@@ -1218,7 +1551,7 @@
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0, 0, 0, 0.6);
     color: white;
     border: none;
     cursor: pointer;
@@ -1229,7 +1562,7 @@
 
   .post-card {
     background: white;
-    border: 1px solid #E4EDE9;
+    border: 1px solid #e4ede9;
     border-radius: 16px;
     padding: 16px;
     margin-top: 14px;
@@ -1243,19 +1576,28 @@
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    background: #1F5D50;
+    background: #1f5d50;
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Baloo Da 2', sans-serif;
+    font-family: "Baloo Da 2", sans-serif;
     font-size: 14px;
     font-weight: 700;
     flex-shrink: 0;
   }
-  .post-meta { flex: 1; }
-  .post-name { font-size: 14px; font-weight: 700; display: block; }
-  .post-time { font-size: 12px; color: #5B675F; }
+  .post-meta {
+    flex: 1;
+  }
+  .post-name {
+    font-size: 14px;
+    font-weight: 700;
+    display: block;
+  }
+  .post-time {
+    font-size: 12px;
+    color: #5b675f;
+  }
   .post-body {
     font-size: 14.5px;
     line-height: 1.65;
@@ -1267,7 +1609,9 @@
     gap: 8px;
     margin: 12px 0;
   }
-  .post-photos-grid.single-photo { grid-template-columns: 1fr; }
+  .post-photos-grid.single-photo {
+    grid-template-columns: 1fr;
+  }
   .post-photo-img {
     width: 100%;
     border-radius: 10px;
@@ -1277,11 +1621,14 @@
     display: flex;
     justify-content: space-between;
     font-size: 12px;
-    color: #5B675F;
+    color: #5b675f;
     padding: 10px 2px;
-    border-bottom: 1px solid #E4EDE9;
+    border-bottom: 1px solid #e4ede9;
   }
-  .post-actions { display: flex; padding-top: 6px; }
+  .post-actions {
+    display: flex;
+    padding-top: 6px;
+  }
   .post-action {
     flex: 1;
     display: flex;
@@ -1291,19 +1638,23 @@
     padding: 9px 0;
     font-size: 13px;
     font-weight: 500;
-    color: #5B675F;
+    color: #5b675f;
     background: none;
     border: none;
     cursor: pointer;
     border-radius: 8px;
   }
-  .post-action:hover { background: #F6F4EE; }
-  .post-action.liked { color: #B8503F; }
+  .post-action:hover {
+    background: #f6f4ee;
+  }
+  .post-action.liked {
+    color: #b8503f;
+  }
 
   .comments-section {
     margin-top: 12px;
     padding-top: 12px;
-    border-top: 1px solid #E4EDE9;
+    border-top: 1px solid #e4ede9;
   }
   .comment-input-row {
     display: flex;
@@ -1315,12 +1666,12 @@
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: #1F5D50;
+    background: #1f5d50;
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Baloo Da 2', sans-serif;
+    font-family: "Baloo Da 2", sans-serif;
     font-size: 12px;
     font-weight: 700;
     flex-shrink: 0;
@@ -1328,11 +1679,11 @@
   .comment-textarea {
     flex: 1;
     padding: 8px 12px;
-    border: 1px solid #E4EDE9;
+    border: 1px solid #e4ede9;
     border-radius: 12px;
     font-size: 13px;
     outline: none;
-    font-family: 'Hind Siliguri', sans-serif;
+    font-family: "Hind Siliguri", sans-serif;
     resize: none;
     min-height: 36px;
   }
@@ -1340,7 +1691,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #1F5D50;
+    background: #1f5d50;
     color: white;
     border: none;
     cursor: pointer;
@@ -1355,7 +1706,7 @@
   }
   .comment-bubble {
     flex: 1;
-    background: #F6F4EE;
+    background: #f6f4ee;
     border-radius: 14px;
     padding: 9px 14px;
   }
@@ -1380,15 +1731,19 @@
     align-items: center;
     gap: 4px;
     font-size: 11.5px;
-    color: #5B675F;
+    color: #5b675f;
     background: none;
     border: none;
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 6px;
   }
-  .comment-action:hover { background: #E4EDE9; }
-  .comment-action.liked { color: #B8503F; }
+  .comment-action:hover {
+    background: #e4ede9;
+  }
+  .comment-action.liked {
+    color: #b8503f;
+  }
   .comment-menu-wrapper {
     position: relative;
     display: inline-block;
@@ -1397,22 +1752,24 @@
     background: none;
     border: none;
     cursor: pointer;
-    color: #8B9790;
+    color: #8b9790;
     padding: 2px 6px;
     border-radius: 50%;
     display: flex;
     align-items: center;
   }
-  .comment-three-dot:hover { background: #E4EDE9; }
+  .comment-three-dot:hover {
+    background: #e4ede9;
+  }
   .comment-dropdown-menu {
     position: absolute;
     top: 0;
     left: 100%;
     margin-left: 8px;
     background: white;
-    border: 1px solid #E4EDE9;
+    border: 1px solid #e4ede9;
     border-radius: 10px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     min-width: 120px;
     z-index: 9999;
     overflow: hidden;
@@ -1427,22 +1784,28 @@
     border: none;
     cursor: pointer;
     font-size: 13px;
-    font-family: 'Hind Siliguri', sans-serif;
-    color: #16231F;
+    font-family: "Hind Siliguri", sans-serif;
+    color: #16231f;
     text-align: left;
   }
-  .dropdown-item:hover { background: #F6F4EE; }
-  .delete-item { color: #B8503F; }
-  .delete-item:hover { background: #FDF0ED; }
+  .dropdown-item:hover {
+    background: #f6f4ee;
+  }
+  .delete-item {
+    color: #b8503f;
+  }
+  .delete-item:hover {
+    background: #fdf0ed;
+  }
 
   .edit-input {
     width: 100%;
     padding: 8px 10px;
-    border: 1px solid #1F5D50;
+    border: 1px solid #1f5d50;
     border-radius: 8px;
     font-size: 13px;
     outline: none;
-    font-family: 'Hind Siliguri', sans-serif;
+    font-family: "Hind Siliguri", sans-serif;
     resize: none;
     margin-top: 4px;
   }
@@ -1453,7 +1816,7 @@
   }
   .save-edit-btn {
     padding: 4px 12px;
-    background: #1F5D50;
+    background: #1f5d50;
     color: white;
     border: none;
     border-radius: 6px;
@@ -1462,9 +1825,9 @@
   }
   .cancel-edit-btn {
     padding: 4px 12px;
-    background: #F6F4EE;
-    color: #5B675F;
-    border: 1px solid #E4EDE9;
+    background: #f6f4ee;
+    color: #5b675f;
+    border: 1px solid #e4ede9;
     border-radius: 6px;
     font-size: 12px;
     cursor: pointer;
@@ -1474,8 +1837,12 @@
     gap: 8px;
     margin: 8px 0 0 38px;
   }
-  .reply-bubble { padding: 7px 12px; }
-  .nested-replies { margin-top: 4px; }
+  .reply-bubble {
+    padding: 7px 12px;
+  }
+  .nested-replies {
+    margin-top: 4px;
+  }
   .reply-input-row {
     display: flex;
     align-items: center;
@@ -1486,8 +1853,8 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: #FDF0ED;
-    color: #B8503F;
+    background: #fdf0ed;
+    color: #b8503f;
     border: none;
     cursor: pointer;
     display: flex;
@@ -1497,14 +1864,14 @@
   .no-comments {
     text-align: center;
     font-size: 12px;
-    color: #8B9790;
+    color: #8b9790;
     padding: 12px;
   }
 
   .empty-text {
     text-align: center;
     padding: 2rem;
-    color: #5B675F;
+    color: #5b675f;
   }
 
   .about-card {
@@ -1512,21 +1879,23 @@
     border-radius: 16px;
     padding: 20px;
     margin-top: 16px;
-    border: 1px solid #E4EDE9;
+    border: 1px solid #e4ede9;
   }
   .detail-item {
     display: flex;
     align-items: flex-start;
     gap: 12px;
     padding: 12px 0;
-    border-bottom: 1px solid #F6F4EE;
+    border-bottom: 1px solid #f6f4ee;
   }
-  .detail-item:last-child { border-bottom: none; }
+  .detail-item:last-child {
+    border-bottom: none;
+  }
   /* .detail-item svg { color: #1F5D50; flex-shrink: 0; margin-top: 3px; } */
   .detail-label {
     display: block;
     font-size: 12px;
-    color: #8B9790;
+    color: #8b9790;
   }
   .detail-value {
     font-size: 14px;
@@ -1539,7 +1908,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.85);
+    background: rgba(0, 0, 0, 0.85);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1557,14 +1926,14 @@
     max-height: 55vh;
     border-radius: 16px;
     object-fit: contain;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   }
   .preview-placeholder {
     width: 180px;
     height: 180px;
     border-radius: 50%;
-    background: #E4EDE9;
-    color: #8B9790;
+    background: #e4ede9;
+    color: #8b9790;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1578,17 +1947,17 @@
     height: 40px;
     border-radius: 50%;
     background: white;
-    color: #16231F;
+    color: #16231f;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
   .photo-preview-close:hover {
-    background: #FDF0ED;
-    color: #B8503F;
+    background: #fdf0ed;
+    color: #b8503f;
   }
   .photo-preview-actions {
     display: flex;
@@ -1598,12 +1967,12 @@
     flex-wrap: wrap;
   }
   .btn-danger {
-    background: #FDF0ED;
-    color: #B8503F;
-    border: 1px solid #B8503F;
+    background: #fdf0ed;
+    color: #b8503f;
+    border: 1px solid #b8503f;
   }
   .btn-danger:hover {
-    background: #B8503F;
+    background: #b8503f;
     color: white;
   }
 
@@ -1613,7 +1982,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1633,71 +2002,79 @@
     font-size: 1.25rem;
     font-weight: 700;
     margin-bottom: 1rem;
-    font-family: 'Baloo Da 2', sans-serif;
+    font-family: "Baloo Da 2", sans-serif;
   }
-  .form-group { margin-bottom: 1rem; }
+  .form-group {
+    margin-bottom: 1rem;
+  }
   .modal-label {
     display: block;
     font-size: 0.875rem;
     font-weight: 600;
     margin-bottom: 0.375rem;
-    color: #16231F;
-    font-family: 'Hind Siliguri', sans-serif;
+    color: #16231f;
+    font-family: "Hind Siliguri", sans-serif;
   }
   .form-input {
     width: 100%;
     padding: 0.75rem 1rem;
-    border: 2px solid #E4EDE9;
+    border: 2px solid #e4ede9;
     border-radius: 10px;
-    font-family: 'Hind Siliguri', sans-serif;
+    font-family: "Hind Siliguri", sans-serif;
     font-size: 0.9375rem;
     outline: none;
     transition: all 0.2s;
   }
   .form-input:focus {
-    border-color: #1F5D50;
-    box-shadow: 0 0 0 4px rgba(31,93,80,0.1);
+    border-color: #1f5d50;
+    box-shadow: 0 0 0 4px rgba(31, 93, 80, 0.1);
   }
   .modal-actions {
     display: flex;
     gap: 10px;
     margin-top: 1.5rem;
   }
-  .menu-container { position: relative; }
+  .menu-container {
+    position: relative;
+  }
   .three-dot-btn {
     background: none;
     border: none;
     cursor: pointer;
-    color: #5B675F;
+    color: #5b675f;
     padding: 4px 8px;
     border-radius: 50%;
     transition: all 0.2s;
     display: flex;
     align-items: center;
   }
-  .three-dot-btn:hover { background: #F6F4EE; }
+  .three-dot-btn:hover {
+    background: #f6f4ee;
+  }
   .dropdown-menu {
     position: absolute;
     right: 0;
     top: 100%;
     background: white;
-    border: 1px solid #E4EDE9;
+    border: 1px solid #e4ede9;
     border-radius: 10px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     min-width: 140px;
     z-index: 50;
     overflow: hidden;
   }
-  .edit-post-section { margin: 12px 0; }
+  .edit-post-section {
+    margin: 12px 0;
+  }
   .edit-post-input {
     width: 100%;
     padding: 10px;
-    border: 1px solid #E4EDE9;
+    border: 1px solid #e4ede9;
     border-radius: 10px;
     font-size: 14px;
     resize: none;
     outline: none;
-    font-family: 'Hind Siliguri', sans-serif;
+    font-family: "Hind Siliguri", sans-serif;
   }
   .edit-post-actions {
     display: flex;

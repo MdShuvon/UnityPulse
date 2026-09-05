@@ -66,6 +66,12 @@
       <span>Tasks</span>
     </a>
     
+    <div class="nav-section-label">Cause</div>
+    <a href="/admin/causes" class="nav-item" class:active={currentPath.includes('/admin/causes')}>
+      <Leaf size={16} />
+      <span>Causes</span>
+    </a>
+    
     <div class="role-chip">
       <Shield size={12} />
       {user?.role || 'ADMIN'}

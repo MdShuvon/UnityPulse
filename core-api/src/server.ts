@@ -14,7 +14,8 @@ import { authRoutes }         from './routes/auth';
 import { profileRoutes }      from './routes/profile';
 import { orgRoutes }          from './routes/organizations';
 import { donationRoutes }     from './routes/donations';
-import { taskRoutes }         from './routes/tasks';
+import { taskRoutes } from './routes/tasks';
+import { causeRoutes } from './routes/causes';
 import { leaderboardRoutes }  from './routes/leaderboard';
 import { postRoutes }         from './routes/posts';
 import { photoRoutes }        from './routes/photos';
@@ -104,6 +105,7 @@ async function start() {
   await app.register(orgRoutes);
   await app.register(donationRoutes);
   await app.register(taskRoutes);
+  await app.register(causeRoutes);
   await app.register(leaderboardRoutes);
   await app.register(postRoutes);
   await app.register(photoRoutes);
