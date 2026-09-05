@@ -57,11 +57,11 @@
   .layout-footer {
     background: white;
     border-top: 1px solid #E4EDE9;
-    padding: 16px;
+    padding: 16px 32px;
     margin-top: 2rem;
   }
   .layout-footer-container {
-    max-width: 640px;
+    max-width: 1200px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -82,9 +82,40 @@
     border-bottom: 1px solid #E4EDE9;
   }
 
+  /* ─── Global Main Content Width ─── */
+  :global(.main-content) {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem 2rem;
+  }
+
+  /* ─── Global Hero Heights ─── */
+  :global(.cause-big),
+  :global(.detail-hero) {
+    min-height: 50vh !important;
+  }
+
+  :global(.skeleton-big) {
+    min-height: 50vh !important;
+  }
+
   @media (max-width: 768px) {
     .header-placeholder {
       height: 56px;
+    }
+    .layout-footer {
+      padding: 16px;
+    }
+    :global(.main-content) {
+      max-width: 100%;
+      padding: 1rem;
+    }
+    :global(.cause-big),
+    :global(.detail-hero) {
+      min-height: 35vh !important;
+    }
+    :global(.skeleton-big) {
+      min-height: 35vh !important;
     }
   }
 </style>
