@@ -110,9 +110,9 @@
 <style>
   .about-page {
     min-height: 100vh;
-    background: #F6F4EE;
     font-family: 'DM Sans', sans-serif;
     color: #16231F;
+    background: linear-gradient(180deg, #E8F5E9 0%, #F6F4EE 30%, #F6F4EE 70%, #E8F0ED 100%);
   }
   .bangla { font-family: 'Hind Siliguri', sans-serif; }
 

@@ -82,6 +82,26 @@
     border-bottom: 1px solid #E4EDE9;
   }
 
+  /* ─── Global Page Background Themes ─── */
+  :global(.about-page) {
+    background: linear-gradient(180deg, rgba(31,93,80,0.11) 0%, #F6F4EE 35%, #F6F4EE 75%, rgba(31,93,80,0.08) 100%) !important;
+  }
+  :global(.press-page) {
+    background: linear-gradient(180deg, rgba(31,93,80,0.11) 0%, #F6F4EE 35%, #F6F4EE 75%, rgba(31,93,80,0.08) 100%) !important;
+  }
+  :global(.career-page) {
+    background: linear-gradient(180deg, rgba(46,122,105,0.11) 0%, #F6F4EE 35%, #F6F4EE 75%, rgba(46,122,105,0.08) 100%) !important;
+  }
+  :global(.tasks-page) {
+    background: linear-gradient(180deg, rgba(233,162,59,0.11) 0%, #F6F4EE 35%, #F6F4EE 75%, rgba(233,162,59,0.10) 100%) !important;
+  }
+  :global(.leaderboard-page) {
+    background: linear-gradient(180deg, rgba(22,35,31,0.11) 0%, #F6F4EE 35%, #F6F4EE 75%, rgba(22,35,31,0.08) 100%) !important;
+  }
+  :global(.donate-page) {
+    background: linear-gradient(180deg, rgba(184,80,63,0.11) 0%, #F6F4EE 35%, #F6F4EE 75%, rgba(184,80,63,0.08) 100%) !important;
+  }
+
   /* ─── Global Main Content Width ─── */
   :global(.main-content) {
     max-width: 1200px;

@@ -1,6 +1,47 @@
 <script lang="ts">
-  import { Leaf, User, Home, Newspaper, Briefcase, CheckSquare, Trophy, Heart, Shield, Menu, X, LogOut } from 'lucide-svelte';
+  import { Leaf, User, Home, Newspaper, Briefcase, CheckSquare, Trophy, Heart, Shield, Menu, X, LogOut, Search } from 'lucide-svelte';
   import { clickOutside } from '$lib/actions/clickOutside';
+  
+  let searchOpen = $state(false);
+  let searchQuery = $state('');
+  let searchResults = $state<any>({ causes: [], projects: [], jobs: [] });
+  let searchLoading = $state(false);
+  let debounceTimer: any;
+
+  async function performSearch() {
+    if (searchQuery.trim().length < 2) {
+      searchResults = { causes: [], projects: [], jobs: [] };
+      return;
+    }
+
+    searchLoading = true;
+    try {
+      const res = await fetch(`http://localhost:3001/search/all?q=${encodeURIComponent(searchQuery)}`, {
+        credentials: 'include'
+      });
+      if (res.ok) {
+        searchResults = await res.json();
+      }
+    } catch (err) {
+      searchResults = { causes: [], projects: [], jobs: [] };
+    } finally {
+      searchLoading = false;
+    }
+  }
+
+  function onSearchInput(e: Event) {
+    searchQuery = (e.target as HTMLInputElement).value;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(performSearch, 300);
+  }
+
+  function handleOutsideClick() {
+    // শুধু তখনই বন্ধ হবে যখন কিছু লেখা নেই
+    if (searchQuery.trim() === '') {
+      searchOpen = false;
+      searchResults = { causes: [], projects: [], jobs: [] };
+    }
+  }
   
   let { 
     user = null, 
@@ -15,6 +56,15 @@
   let showMoreMenu = $state(false);
   let showDesktopProfileMenu = $state(false);
   let showMobileProfileMenu = $state(false);
+  let isMobile = $state(false);
+
+  $effect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    isMobile = mq.matches;
+    const handler = (e: MediaQueryListEvent) => { isMobile = e.matches; };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  });
 
   async function handleLogout() {
     try {
@@ -40,6 +90,85 @@
       <Leaf size={28} class="brand-icon" />
       <span class="brand-name">UNITYPULSE</span>
     </a>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="search-container" class:open={searchOpen} onmouseleave={() => { if (searchQuery.trim() === '') { searchOpen = false; searchResults = { causes: [], projects: [], jobs: [] }; } }}>
+      {#if !searchOpen}
+        <button
+          class="search-trigger"
+          onclick={() => searchOpen = true}
+          onmouseenter={() => searchOpen = true}
+          aria-label="Open search"
+        >
+          <Search size={18} />
+        </button>
+      {:else}
+                      <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <div class="search-expand" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.key === 'Escape' && (searchOpen = false)} role="presentation">
+          <Search
+            size={16}
+            style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #8B9790; pointer-events: none;"
+          />
+          <input
+            type="text"
+            placeholder="কি খুঁজছেন?..."
+            value={searchQuery}
+            oninput={onSearchInput}
+            class="search-input-field"
+          />
+          {#if searchQuery.trim() !== ''}
+            <button class="search-close" onclick={() => { searchQuery = ''; searchResults = { causes: [], projects: [], jobs: [] }; }} aria-label="Clear search">
+              <X size={14} />
+            </button>
+          {/if}
+        </div>
+      {/if}
+
+      {#if searchQuery.trim().length >= 2}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <div class="search-results-dropdown" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
+          {#if searchLoading}
+            <div class="search-loading">খোঁজা হচ্ছে...</div>
+          {:else}
+            {#if searchResults.causes.length > 0}
+              <div class="search-group">
+                <div class="search-group-label">Cause</div>
+                {#each searchResults.causes as cause}
+                  <a href={`/causes/${cause.id}`} class="search-result-item" onclick={() => { searchOpen = false; searchQuery = ''; }}>
+                    <Leaf size={14} /> {cause.title}
+                  </a>
+                {/each}
+              </div>
+            {/if}
+
+            {#if searchResults.projects.length > 0}
+              <div class="search-group">
+                <div class="search-group-label">Projects</div>
+                {#each searchResults.projects as project}
+                  <a href={`/donate/${project.id}`} class="search-result-item" onclick={() => { searchOpen = false; searchQuery = ''; }}>
+                    <Heart size={14} /> {project.title}
+                  </a>
+                {/each}
+              </div>
+            {/if}
+
+            {#if searchResults.jobs.length > 0}
+              <div class="search-group">
+                <div class="search-group-label">Jobs</div>
+                {#each searchResults.jobs as job}
+                  <a href={`/career/${job.id}`} class="search-result-item" onclick={() => { searchOpen = false; searchQuery = ''; }}>
+                    <Briefcase size={14} /> {job.title}
+                  </a>
+                {/each}
+              </div>
+            {/if}
+
+            {#if searchResults.causes.length === 0 && searchResults.projects.length === 0 && searchResults.jobs.length === 0}
+              <div class="search-empty bangla">কিছু পাওয়া যায়নি</div>
+            {/if}
+          {/if}
+        </div>
+      {/if}
+    </div>
   </div>
 
   <nav class="header-nav">
@@ -109,6 +238,13 @@
   </div>
   
   <div class="mobile-actions">
+    <button
+      class="search-trigger"
+      onclick={() => searchOpen = !searchOpen}
+      aria-label="Toggle search"
+    >
+      <Search size={18} />
+    </button>
     <button 
     onclick={() => showMoreMenu = !showMoreMenu} 
     class="menu-btn" 
@@ -160,6 +296,74 @@
     {/if}
   </div>
 </header>
+
+{#if searchOpen && isMobile}
+  <div class="mobile-search-bar" use:clickOutside={handleOutsideClick}>
+    <div class="mobile-search-bar-inner">
+      <Search
+        size={16}
+        style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #8B9790; pointer-events: none;"
+      />
+      <input
+        type="text"
+        placeholder="কি খুঁজছেন?..."
+        value={searchQuery}
+        oninput={onSearchInput}
+        class="search-input-field"
+      />
+      {#if searchQuery.trim() !== ''}
+        <button class="search-close" onclick={() => { searchQuery = ''; searchResults = { causes: [], projects: [], jobs: [] }; }} aria-label="Clear search">
+          <X size={14} />
+        </button>
+      {/if}
+    </div>
+
+    {#if searchQuery.trim().length >= 2}
+      <div class="mobile-results-inline">
+        {#if searchLoading}
+          <div class="search-loading">খোঁজা হচ্ছে...</div>
+        {:else}
+          {#if searchResults.causes.length > 0}
+            <div class="search-group">
+              <div class="search-group-label">Cause</div>
+              {#each searchResults.causes as cause}
+                <a href={`/causes/${cause.id}`} class="search-result-item" onclick={() => { searchOpen = false; }}>
+                  <Leaf size={14} /> {cause.title}
+                </a>
+              {/each}
+            </div>
+          {/if}
+
+          {#if searchResults.projects.length > 0}
+            <div class="search-group">
+              <div class="search-group-label">Projects</div>
+              {#each searchResults.projects as project}
+                <a href={`/donate/${project.id}`} class="search-result-item" onclick={() => { searchOpen = false; }}>
+                  <Heart size={14} /> {project.title}
+                </a>
+              {/each}
+            </div>
+          {/if}
+
+          {#if searchResults.jobs.length > 0}
+            <div class="search-group">
+              <div class="search-group-label">Jobs</div>
+              {#each searchResults.jobs as job}
+                <a href={`/career/${job.id}`} class="search-result-item" onclick={() => { searchOpen = false; }}>
+                  <Briefcase size={14} /> {job.title}
+                </a>
+              {/each}
+            </div>
+          {/if}
+
+          {#if searchResults.causes.length === 0 && searchResults.projects.length === 0 && searchResults.jobs.length === 0}
+            <div class="search-empty bangla">কিছু পাওয়া যায়নি</div>
+          {/if}
+        {/if}
+      </div>
+    {/if}
+  </div>
+{/if}
 
 {#if showMoreMenu}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -224,7 +428,12 @@
     z-index: 100;
   }
 
-  .header-left { justify-self: start; }
+  .header-left {
+    justify-self: start;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
   .header-nav { justify-self: center; display: flex; gap: 24px; }
   .header-right { justify-self: end; display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
 
@@ -474,6 +683,144 @@
     transform: rotate(90deg) scale(1.08);
   }
 
+  /* ─── Search Styles ─── */
+  .search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 8px;
+  }
+  .search-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #E4EDE9;
+    color: #5B675F;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .search-trigger:hover {
+    background: #1F5D50;
+    color: white;
+    transform: scale(1.08);
+  }
+  .search-container.open .search-trigger {
+    background: #1F5D50;
+    color: white;
+  }
+
+  .search-expand {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid #E4EDE9;
+    border-radius: 22px;
+    padding: 5px 6px 5px 38px;
+    animation: searchExpand 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: left center;
+    box-shadow: 0 2px 12px rgba(31,93,80,0.12);
+    min-width: 240px;
+  }
+  .search-expand:focus-within {
+    border-color: #1F5D50;
+    box-shadow: 0 0 0 3px rgba(31,93,80,0.1);
+  }
+  @keyframes searchExpand {
+    from { opacity: 0; width: 0; transform: scaleX(0); }
+    to { opacity: 1; width: 220px; transform: scaleX(1); }
+  }
+  .search-input-field {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    font-family: 'Hind Siliguri', sans-serif;
+    background: transparent;
+    min-width: 120px;
+    padding: 0;
+  }
+  .search-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #8B9790;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .search-close:hover {
+    color: #B8503F;
+    background: #FDF0ED;
+  }
+
+  /* FIX: এখন dropdown টা search-container এর সাপেক্ষে absolute — ঠিক নিচে বসবে */
+  .search-results-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    background: white;
+    border: 1px solid #E4EDE9;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+    width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 999;
+    animation: searchResultsIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: top left;
+  }
+  @keyframes searchResultsIn {
+    from { opacity: 0; transform: translateY(-6px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .search-loading {
+    padding: 14px;
+    text-align: center;
+    color: #5B675F;
+    font-size: 12.5px;
+    font-family: 'Hind Siliguri', sans-serif;
+  }
+  .search-group { padding: 6px 0; }
+  .search-group-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #8B9790;
+    padding: 4px 14px;
+  }
+  .search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #16231F;
+    text-decoration: none;
+    font-family: 'Hind Siliguri', sans-serif;
+    transition: background 0.15s;
+  }
+  .search-result-item:hover { background: #F6F4EE; }
+  .search-empty {
+    padding: 16px;
+    text-align: center;
+    color: #8B9790;
+    font-size: 12.5px;
+  }
+
   .dropdown-overlay {
     position: fixed;
     top: 0;
@@ -577,10 +924,59 @@
   .bottom-nav-item.active::after { width: 24px; }
   .bottom-nav-item.active :global(.nav-icon) { transform: translateY(-3px) scale(1.15); }
 
+  /* Desktop-এ যাতে duplicate mobile search bar দেখা না যায় এবং clickOutside হ্যান্ডলার
+     আসল ডেস্কটপ search input-এর ক্লিককে "বাইরের ক্লিক" ধরে বন্ধ করে না দেয়। */
+  .mobile-search-bar {
+    display: none;
+  }
+
   /* ─── Responsive Breakpoint ──────────────────── */
   @media (max-width: 768px) {
     .desktop-header { display: none; }
     .mobile-topbar { display: flex; }
     .mobile-bottom-nav { display: flex; }
+
+    .mobile-search-bar {
+      display: block;
+      position: sticky;
+      top: 56px;
+      z-index: 99;
+      background: #F6F4EE;
+      padding: 8px 12px;
+      border-bottom: 1px solid #E4EDE9;
+      animation: mobileSearchBarIn 0.2s ease;
+    }
+    @keyframes mobileSearchBarIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .mobile-search-bar-inner {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: white;
+      border: 2px solid #1F5D50;
+      border-radius: 22px;
+      padding: 6px 8px 6px 36px;
+    }
+    .mobile-search-bar .search-input-field {
+      flex: 1;
+      font-size: 14px;
+      min-width: 0;
+    }
+    .mobile-results-inline {
+      background: white;
+      border: 1px solid #E4EDE9;
+      border-radius: 12px;
+      margin-top: 6px;
+      max-height: 40vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      animation: mobileSearchResultsIn 0.2s ease;
+    }
+    @keyframes mobileSearchResultsIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   }
 </style>

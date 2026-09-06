@@ -1,3 +1,4 @@
+//core-api/src/routes/leaderboard.ts
 import { FastifyInstance }    from 'fastify';
 import { leaderboardService } from '../services/leaderboardService';
 import { requireAuth }        from '../middleware/authGuard';
