@@ -1,3 +1,5 @@
+// core-api/src/routes/admin/tasks.ts
+
 import { FastifyInstance }  from 'fastify';
 import { taskService }       from '../../services/taskService';
 import { requireAdmin }      from '../../middleware/authGuard';

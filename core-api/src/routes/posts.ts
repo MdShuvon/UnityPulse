@@ -1,3 +1,4 @@
+// core-api/src/routes/posts.ts
 import { FastifyInstance } from 'fastify';
 import { postService }     from '../services/postService';
 import { requireAuth }     from '../middleware/authGuard';

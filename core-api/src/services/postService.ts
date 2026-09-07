@@ -1,3 +1,4 @@
+// core-api/src/services/postService.ts
 import { prisma }               from '../lib/prisma';
 import { redis }               from '../lib/redis';
 import { fileService }         from './fileService';

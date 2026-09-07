@@ -1,3 +1,4 @@
+<!-- frontend/src/routes/admin/tasks/+page.svelte - FIXED SYNTAX -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -13,6 +14,7 @@
   let rejectNote = $state('');
   let showRejectInput = $state(false);
   let rejectingSubmission = $state<any>(null);
+  let currentSubmissionIndex = $state(0);
 
   function getInitials(name: string): string {
     return name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?';
@@ -23,19 +25,28 @@
   }
 
   async function fetchTasks() {
+    isLoading = true;
     try {
       const res = await fetch('http://localhost:3001/admin/tasks', {
         credentials: 'include',
       });
       if (res.ok) {
         tasks = await res.json();
+      } else {
+        error = 'Task লোড করতে সমস্যা হয়েছে';
       }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+      error = 'Network error';
+    } finally {
+      isLoading = false;
+    }
   }
 
   async function openSubmissions(taskId: string) {
     reviewingTask = tasks.find(t => t.id === taskId);
     showReviewModal = true;
+    currentSubmissionIndex = 0;
     
     try {
       const res = await fetch('http://localhost:3001/admin/tasks/submissions', {
@@ -45,7 +56,9 @@
         const allSubs = await res.json();
         submissions = allSubs.filter((s: any) => s.task?.id === taskId);
       }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   async function acceptSubmission(submissionId: string) {
@@ -62,23 +75,27 @@
         const newSubs = submissions.filter(s => s.id !== submissionId);
         submissions = newSubs;
         
-        // Auto-advance to next submission
         if (currentSubmissionIndex >= newSubs.length) {
           currentSubmissionIndex = Math.max(0, newSubs.length - 1);
         }
         
-        // If no more submissions, close modal
         if (newSubs.length === 0) {
           showReviewModal = false;
           currentSubmissionIndex = 0;
         }
       }
-    } catch (err) { alert('Server error'); }
-    finally { isProcessing = false; }
+    } catch (err) {
+      alert('Server error');
+    } finally {
+      isProcessing = false;
+    }
   }
 
   async function submitReject() {
-    if (!rejectNote.trim()) { alert('Reject reason required'); return; }
+    if (!rejectNote.trim()) {
+      alert('Reject reason required');
+      return;
+    }
     if (!rejectingSubmission || isProcessing) return;
     
     isProcessing = true;
@@ -105,8 +122,11 @@
           currentSubmissionIndex = 0;
         }
       }
-    } catch (err) { alert('Server error'); }
-    finally { isProcessing = false; }
+    } catch (err) {
+      alert('Server error');
+    } finally {
+      isProcessing = false;
+    }
   }
 
   async function toggleTaskStatus(taskId: string, currentStatus: string) {
@@ -126,33 +146,26 @@
       if (res.ok) {
         fetchTasks();
       }
-    } catch (err) { alert('Server error'); }
-    finally { isProcessing = false; }
+    } catch (err) {
+      alert('Server error');
+    } finally {
+      isProcessing = false;
+    }
+  }
+
+  function getCurrentSubmission() {
+    return submissions[currentSubmissionIndex] || null;
+  }
+
+  function getRemainingCount(): string {
+    const total = submissions.length;
+    const current = currentSubmissionIndex + 1;
+    return `${current} / ${total}`;
   }
 
   onMount(() => {
     fetchTasks();
-    isLoading = false;
   });
-
-  let currentSubmissionIndex = $state(0);
-
-function getCurrentSubmission() {
-  return submissions[currentSubmissionIndex] || null;
-}
-
-function nextSubmission() {
-  if (currentSubmissionIndex < submissions.length - 1) {
-    currentSubmissionIndex += 1;
-  }
-}
-
-function getRemainingCount(): string {
-  const total = submissions.length;
-  const current = currentSubmissionIndex + 1;
-  return `${current} / ${total}`;
-}
-
 </script>
 
 <div class="tasks-page">
@@ -167,7 +180,14 @@ function getRemainingCount(): string {
   </div>
 
   {#if isLoading}
-    <div class="loading-state"><Loader2 size={48} class="spin-anim" /><p>Loading...</p></div>
+    <div class="loading-state">
+      <Loader2 size={48} class="spin-anim" />
+      <p>Loading...</p>
+    </div>
+  {:else if error}
+    <div class="loading-state">
+      <p>{error}</p>
+    </div>
   {:else if tasks.length > 0}
     {#each tasks as task}
       <div class="task-row">
@@ -183,10 +203,10 @@ function getRemainingCount(): string {
           {task.status === 'CLOSED' ? 'Closed' : 'Open'}
         </span>
         
-        <div class="sub-count" onclick={() => openSubmissions(task.id)} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && openSubmissions(task.id)}>
+        <button type="button" class="sub-count" onclick={() => openSubmissions(task.id)}>
           <span class="num">{task._count?.submissions || 0}</span>
           <span class="lbl">Submissions</span>
-        </div>
+        </button>
         
         <div class="row-actions">
           <button class="icon-btn" onclick={() => goto(`/admin/tasks/create?edit=${task.id}`)} title="Edit">
@@ -203,17 +223,20 @@ function getRemainingCount(): string {
       </div>
     {/each}
   {:else}
-    <div class="empty-state"><p class="bangla">কোনো task নেই। "নতুন Task" button দিয়ে শুরু করুন।</p></div>
+    <div class="empty-state">
+      <p class="bangla">কোনো task নেই। "নতুন Task" button দিয়ে শুরু করুন।</p>
+    </div>
   {/if}
 
   {#if showReviewModal && reviewingTask}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="modal-overlay" onclick={() => { showReviewModal = false; showRejectInput = false; }} onkeydown={(e) => e.key === 'Escape' && (showReviewModal = false)} role="dialog" tabindex="-1">
-      <div class="review-modal">
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<div class="modal-overlay" onclick={() => { showReviewModal = false; showRejectInput = false; }} role="dialog" tabindex="-1">
+      <div class="review-modal" onclick={(e) => e.stopPropagation()}>
         <h2 class="review-title">{reviewingTask.title} - Submissions</h2>
         
         {#if submissions.length > 0}
-          {@const sub = submissions[currentSubmissionIndex]}
+          {@const sub = getCurrentSubmission()}
           <div class="counter-badge">{getRemainingCount()}</div>
           
           {#if sub}
@@ -264,24 +287,30 @@ function getRemainingCount(): string {
 
 <style>
   .counter-badge {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 600;
-  background: #FBEBD0;
-  color: #8A5A17;
-  padding: 3px 10px;
-  border-radius: 20px;
-  margin-bottom: 12px;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    background: #FBEBD0;
+    color: #8A5A17;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
   }
+  .sub-count {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
   .row-actions { display: flex; gap: 6px; }
   .tasks-page { min-height: 100vh; }
-  .page-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .page-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
   .page-title { font-family: 'Baloo Da 2', sans-serif; font-size: 22px; font-weight: 700; color: #153F36; }
   .page-sub { font-size: 13px; color: #5B675F; margin-top: 4px; }
   .btn-new { display: flex; align-items: center; gap: 6px; background: #1F5D50; color: white; font-size: 13px; font-weight: 500; padding: 10px 18px; border-radius: 9px; border: none; cursor: pointer; }
+  .btn-new:hover { background: #153F36; }
   
-  /* .spin-anim { animation: spin 1s linear infinite; color: #1F5D50; } */
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  /* .spin-anim { animation: spin 1s linear infinite; } */
   .loading-state { text-align: center; padding: 3rem; color: #5B675F; }
   
   .task-row { background: white; border: 1px solid #E4EDE9; border-radius: 14px; padding: 16px 18px; margin-top: 12px; display: flex; align-items: center; gap: 14px; }
@@ -295,10 +324,12 @@ function getRemainingCount(): string {
   .status-badge.closed { background: #E4EDE9; color: #5B675F; }
   
   .sub-count { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #FBEBD0; color: #8A5A17; border-radius: 10px; padding: 6px 14px; cursor: pointer; min-width: 64px; }
+  .sub-count:hover { background: #F5D9A8; }
   .sub-count .num { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 700; }
   .sub-count .lbl { font-size: 9px; }
   
   .icon-btn { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; padding: 6px 10px; border-radius: 7px; border: 1px solid #E4EDE9; background: white; color: #1F5D50; cursor: pointer; }
+  .icon-btn:hover { background: #F6F4EE; }
   
   .empty-state { text-align: center; padding: 48px 20px; background: white; border: 1px dashed #E4EDE9; border-radius: 16px; margin-top: 16px; }
   
@@ -320,6 +351,7 @@ function getRemainingCount(): string {
   .admin-actions { display: flex; gap: 8px; margin-top: 12px; }
   .btn { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 13px; font-weight: 500; padding: 9px 18px; border-radius: 9px; border: none; cursor: pointer; flex: 1; }
   .btn-accept { background: #1F5D50; color: white; }
+  .btn-accept:hover { background: #153F36; }
   .btn-reject { background: white; color: #B8503F; border: 1px solid #B8503F; }
   .btn-cancel { background: #F6F4EE; color: #5B675F; }
   .close-btn { margin-top: 16px; width: 100%; }

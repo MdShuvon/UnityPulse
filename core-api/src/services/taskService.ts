@@ -1,3 +1,4 @@
+// core-api/src/services/taskService.ts - COMPLETE FIXED FILE
 import { prisma }               from '../lib/prisma';
 import { redis, taskEmitter }  from '../lib/redis';
 import { pointService }        from './pointService';
@@ -16,7 +17,6 @@ function todayBD(): Date { return toBDDate(new Date()); }
 export class TaskService {
 
   // ── CREATE TASK ──────────────────────────────────────────────────────
-  // Fix 3: past date block করা হয়েছে
   async createTask(adminId: string, data: {
     title: string; description: string;
     date?: string; deadline?: string | null;
@@ -40,7 +40,7 @@ export class TaskService {
       finalOrgId = adminOrg.id;
     }
 
-    // Fix: date field-এ deadline রাখা হচ্ছে, না থাকলে future date (কখনো expire হবে না)
+    // Fix: date field-এ deadline রাখা হচ্ছে, না থাকলে future date
     const taskDate = data.deadline ? new Date(data.deadline) : new Date('2099-12-31');
     taskDate.setHours(0, 0, 0, 0);
 
@@ -104,10 +104,93 @@ export class TaskService {
     });
   }
 
+  // ── PUBLIC TASKS (Guest + Member) ───────────────────────────────────
+
+  async getPublicTasks(userId: string | null) {
+    let isSuperAdmin = false;
+    if (userId) {
+      const requester = await prisma.user.findUnique({
+        where: { id: userId }, select: { role: true },
+      });
+      isSuperAdmin = requester?.role === 'SUPER_ADMIN';
+    }
+
+    if (isSuperAdmin) {
+      return prisma.task.findMany({
+        include: {
+          org: { select: { id: true, name: true } },
+          _count: { select: { submissions: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+    }
+
+    const where: any = {
+      status: 'OPEN',
+      OR: [{ orgId: null }],
+    };
+
+    if (userId) {
+      const membership = await prisma.orgMembership.findFirst({
+        where: { userId, status: 'APPROVED' },
+        select: { orgId: true },
+      });
+      if (membership) {
+        where.OR.push({ orgId: membership.orgId as string });
+      }
+    }
+
+    return prisma.task.findMany({
+      where,
+      include: {
+        org: { select: { id: true, name: true } },
+        _count: { select: { submissions: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+  // ── GET TASK DETAIL ─────────────────────────────────────────────────
+  async getTaskDetail(taskId: string, userId: string | null) {
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+      include: {
+        org: { select: { id: true, name: true } },
+        _count: { select: { submissions: true } },
+      },
+    });
+
+    if (!task) return null;
+
+    // Visibility check — SUPER_ADMIN সবসময় bypass, ঠিক canApprove-এর প্যাটার্নে
+    if (task.orgId) {
+      if (!userId) return null; // Guest can't see org task
+
+      const requester = await prisma.user.findUnique({
+        where: { id: userId }, select: { role: true },
+      });
+
+      if (requester?.role !== 'SUPER_ADMIN') {
+        const membership = await prisma.orgMembership.findFirst({
+          where: { userId, orgId: task.orgId, status: 'APPROVED' },
+        });
+        if (!membership) return null; // Not org member
+      }
+    }
+
+    // If user logged in, check their submission status
+    let mySubmission = null;
+    if (userId) {
+      mySubmission = await prisma.taskSubmission.findUnique({
+        where: {
+          taskId_userId: { taskId, userId },
+        },
+      });
+    }
+
+    return { ...task, mySubmission };
+  }
+
   // ── SUBMIT PROOF ─────────────────────────────────────────────────────
-  // Fix 2: REJECTED হলে resubmit করা যাবে
-  // Fix 4: Task date পার হলে submit block
-  // Fix 5: Buffer accept করে (stream issue নেই)
   async submitProof(
     userId: string,
     taskId: string,
@@ -122,14 +205,14 @@ export class TaskService {
     if (!task) throw new Error('Task পাওয়া যায়নি');
     if (task.status === 'CLOSED') throw new Error('Task বন্ধ হয়ে গেছে');
 
-    // Fix 4: Task এর deadline পার হলে block (deadline null মানে '2099-12-31')
+    // Task এর deadline পার হলে block
     const taskDeadline = new Date(task.date);
-    taskDeadline.setHours(23, 59, 59, 999); // শেষ মুহূর্ত পর্যন্ত
+    taskDeadline.setHours(23, 59, 59, 999);
     if (new Date() > taskDeadline) {
       throw new Error('Task submission এর সময় পার হয়ে গেছে');
     }
 
-    // Org membership check — Global task (orgId null) হলে skip
+    // Org membership check
     if (task.orgId) {
       const membership = await prisma.orgMembership.findFirst({
         where: { userId, orgId: task.orgId as string, status: 'APPROVED' },
@@ -137,7 +220,7 @@ export class TaskService {
       if (!membership) throw new Error('এই task তোমার org এর না');
     }
 
-    // Fix 2: শুধু PENDING বা APPROVED থাকলে block করো
+    // Check active submission
     const activeSubmission = await prisma.taskSubmission.findFirst({
       where: { taskId, userId, status: { in: ['PENDING', 'APPROVED'] } },
     });
@@ -147,19 +230,19 @@ export class TaskService {
       throw new Error('এই task এর submission review pending আছে');
     }
 
-    // Fix 5: Buffer থেকে upload
+    // Upload files
     const photoPaths: string[] = [];
     for (const f of bufferedFiles) {
       const path = await fileService.uploadBuffer(f.buffer, f.mimetype, f.filename, 'proof');
       photoPaths.push(fileService.getUrl(path));
     }
 
-    // Fix 1: @@unique([taskId, userId]) schema এ আছে তাই race condition DB এ block হবে
+    // Create submission
     const submission = await prisma.taskSubmission.create({
       data: { taskId, userId, proofPhotos: photoPaths, status: 'PENDING' },
     });
 
-    // Notify task creator/admin
+    // Notify
     if (task.orgId) {
       const taskOrg = await prisma.organization.findUnique({ where: { id: task.orgId as string } });
       if (taskOrg) {
@@ -169,7 +252,6 @@ export class TaskService {
         );
       }
     } else {
-      // Global task — notify task creator
       await notificationService.send(
         task.createdBy, 'TASK_SUBMITTED',
         `নতুন submission: ${task.title}`, submission.id
@@ -187,7 +269,6 @@ export class TaskService {
     const admin = await prisma.user.findUnique({
       where: { id: adminId }, select: { role: true },
     });
-    // Fix 6: Super admin সব দেখতে ও approve করতে পারে
     if (admin?.role === 'SUPER_ADMIN') return { allowed: true };
 
     const submission = await prisma.taskSubmission.findUnique({
@@ -258,13 +339,12 @@ export class TaskService {
   }
 
   // ── PENDING SUBMISSIONS ──────────────────────────────────────────────
-  // Fix 6: Super admin সব org এর submissions দেখবে
   async getPendingSubmissions(adminId: string) {
     const admin = await prisma.user.findUnique({
       where: { id: adminId }, select: { role: true },
     });
 
-    const where =
+    const where: any =
       admin?.role === 'SUPER_ADMIN'
         ? { status: 'PENDING' }
         : await (async () => {
@@ -309,7 +389,7 @@ export class TaskService {
     const admin = await prisma.user.findUnique({
       where: { id: adminId }, select: { role: true },
     });
-    const where =
+    const where: any =
       admin?.role === 'SUPER_ADMIN'
         ? {}
         : await (async () => {
@@ -325,67 +405,7 @@ export class TaskService {
     });
   }
 
-    // ── PUBLIC TASKS (Guest + Member) ──────────────
-  async getPublicTasks(userId: string | null) {
-    const where: any = {
-      status: 'OPEN',
-      OR: [{ orgId: null }],
-    };
-
-    if (userId) {
-      const membership = await prisma.orgMembership.findFirst({
-        where: { userId, status: 'APPROVED' },
-        select: { orgId: true },
-      });
-      if (membership) {
-        where.OR.push({ orgId: membership.orgId as string });
-      }
-    }
-
-    return prisma.task.findMany({
-      where,
-      include: {
-        org: { select: { id: true, name: true } },
-        _count: { select: { submissions: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
-
-    // ── GET TASK DETAIL ────────────────────────────────────────────────
-  async getTaskDetail(taskId: string, userId: string | null) {
-    const task = await prisma.task.findUnique({
-      where: { id: taskId },
-      include: {
-        org: { select: { id: true, name: true } },
-        _count: { select: { submissions: true } },
-      },
-    });
-
-    if (!task) return null;
-
-    // Visibility check
-    if (task.orgId) {
-      if (!userId) return null; // Guest can't see org task
-      const membership = await prisma.orgMembership.findFirst({
-        where: { userId, orgId: task.orgId, status: 'APPROVED' },
-      });
-      if (!membership) return null; // Not org member
-    }
-
-    // If user logged in, check their submission status
-    let mySubmission = null;
-    if (userId) {
-      mySubmission = await prisma.taskSubmission.findUnique({
-        where: {
-          taskId_userId: { taskId, userId },
-        },
-      });
-    }
-
-    return { ...task, mySubmission };
-  }
-
+  // ── UPDATE TASK STATUS ───────────────────────────────────────────────
   async updateTaskStatus(adminId: string, taskId: string, status: string) {
     const admin = await prisma.user.findUnique({
       where: { id: adminId }, select: { role: true },
@@ -394,7 +414,6 @@ export class TaskService {
     const task = await prisma.task.findUnique({ where: { id: taskId } });
     if (!task) throw new Error('Task পাওয়া যায়নি');
 
-    // SUPER_ADMIN can update any task, LOCAL_ADMIN only own
     if (admin?.role !== 'SUPER_ADMIN' && task.createdBy !== adminId) {
       throw new Error('Permission নেই');
     }

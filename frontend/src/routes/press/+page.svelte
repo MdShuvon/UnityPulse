@@ -1,14 +1,12 @@
-﻿<!-- src/routes/press/+page.svelte -->
+﻿<!-- src/routes/press/+page.svelte - CORRECTED VERSION -->
 <script lang="ts">
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import {
     Loader2,
-    User,
     Heart,
     MessageCircle,
     Share2,
-    ArrowLeft,
     Newspaper,
   } from "lucide-svelte";
 
@@ -19,8 +17,14 @@
   let showComments = $state<Record<string, boolean>>({});
   let comments = $state<Record<string, any[]>>({});
   let commentText = $state<Record<string, string>>({});
+  let currentPage = $state(1);
+  let hasMore = $state(true);
+  let loadingMore = $state(false);
+
+  const API_URL = 'http://localhost:3001';
 
   function decodeHtml(html: string): string {
+    if (!html) return '';
     const textarea = document.createElement("textarea");
     textarea.innerHTML = html;
     return textarea.value;
@@ -47,29 +51,64 @@
     return `${Math.floor(diff / 1440)} দিন আগে`;
   }
 
-  async function fetchPosts() {
+  async function fetchPosts(reset = false) {
+    if (reset) {
+      isLoading = true;
+      currentPage = 1;
+      hasMore = true;
+      posts = [];
+    } else {
+      loadingMore = true;
+    }
+
     try {
-      const res = await fetch("http://localhost:3001/posts?limit=20&page=1", {
+      // FIX: Use /posts/press instead of /posts
+      const url = `${API_URL}/posts/press?limit=20&page=${currentPage}`;
+      console.log('Fetching:', url);
+      
+      const res = await fetch(url, {
         credentials: "include",
       });
+      
+      console.log('Response status:', res.status);
+      
       if (res.ok) {
         const data = await res.json();
-        posts = data.data || [];
+        console.log('Posts data:', data);
+        
+        if (reset) {
+          posts = data.data || [];
+        } else {
+          posts = [...posts, ...(data.data || [])];
+        }
+        
+        hasMore = data.pagination?.hasMore || false;
+        if (hasMore) currentPage++;
+        
+        // Load liked posts from localStorage
         const savedLiked = localStorage.getItem("likedPosts");
         if (savedLiked) likedPosts = new Set(JSON.parse(savedLiked));
+        
+        if (posts.length === 0) {
+          error = ""; // No error, just no posts
+        }
       } else {
-        error = "পোস্ট লোড করতে সমস্যা হয়েছে";
+        const errorData = await res.json().catch(() => null);
+        console.error('Error response:', errorData);
+        error = errorData?.message || errorData?.error || "পোস্ট লোড করতে সমস্যা হয়েছে";
       }
     } catch (err) {
-      error = "পোস্ট লোড করতে সমস্যা হয়েছে";
+      console.error('Fetch error:', err);
+      error = "সার্ভারে সংযোগ করা যাচ্ছে না";
     } finally {
       isLoading = false;
+      loadingMore = false;
     }
   }
 
   async function toggleLike(postId: string) {
     try {
-      const res = await fetch(`http://localhost:3001/posts/${postId}/like`, {
+      const res = await fetch(`${API_URL}/posts/${postId}/like`, {
         method: "POST",
         credentials: "include",
       });
@@ -91,9 +130,11 @@
               }
             : p,
         );
+      } else if (res.status === 401) {
+        alert("লাইক করতে আগে লগইন করুন");
       }
     } catch (err) {
-      console.error(err);
+      console.error('Like error:', err);
     }
   }
 
@@ -104,18 +145,18 @@
   async function fetchComments(postId: string) {
     try {
       const res = await fetch(
-        `http://localhost:3001/posts/${postId}/comments?limit=20&page=1`,
+        `${API_URL}/posts/${postId}/comments?limit=20&page=1`,
         {
           credentials: "include",
         },
       );
       if (res.ok) {
         const data = await res.json();
-        comments[postId] = data.data;
+        comments[postId] = data.data || [];
         comments = { ...comments };
       }
     } catch (err) {
-      console.error(err);
+      console.error('Fetch comments error:', err);
     }
   }
 
@@ -128,9 +169,10 @@
   async function submitComment(postId: string) {
     const content = commentText[postId]?.trim();
     if (!content) return;
+    
     try {
       const res = await fetch(
-        `http://localhost:3001/posts/${postId}/comments`,
+        `${API_URL}/posts/${postId}/comments`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -138,13 +180,29 @@
           body: JSON.stringify({ content }),
         },
       );
+      
       if (res.ok) {
         commentText[postId] = "";
         commentText = { ...commentText };
         fetchComments(postId);
+        
+        // Update comment count
+        posts = posts.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                _count: {
+                  ...p._count,
+                  comments: (p._count?.comments || 0) + 1,
+                },
+              }
+            : p,
+        );
+      } else if (res.status === 401) {
+        alert("কমেন্ট করতে আগে লগইন করুন");
       }
     } catch (err) {
-      console.error(err);
+      console.error('Submit comment error:', err);
     }
   }
 
@@ -158,8 +216,14 @@
     }
   }
 
+  function goToProfile(userId: string) {
+    if (userId) {
+      goto(`/profile/${userId}`);
+    }
+  }
+
   onMount(() => {
-    fetchPosts();
+    fetchPosts(true);
   });
 </script>
 
@@ -180,14 +244,34 @@
         <p>লোড হচ্ছে...</p>
       </div>
     {:else if error}
-      <div class="loading-state"><p>{error}</p></div>
+      <div class="loading-state">
+        <p class="error-text">{error}</p>
+        <button onclick={() => fetchPosts(true)} class="retry-btn">আবার চেষ্টা করুন</button>
+      </div>
     {:else if posts.length > 0}
       {#each posts as post}
         <div class="post-card" id={`post-${post.id}`}>
           <div class="post-head">
-            <div class="mini-avatar">{getInitials(post.user?.name)}</div>
+            <button 
+              class="avatar-btn" 
+              onclick={() => goToProfile(post.userId)}
+              aria-label={`View ${post.user?.name || 'user'}'s profile`}
+            >
+              <div class="mini-avatar">
+                {#if post.user?.profilePhoto}
+                  <img src={post.user.profilePhoto} alt={post.user?.name} class="avatar-img" />
+                {:else}
+                  {getInitials(post.user?.name)}
+                {/if}
+              </div>
+            </button>
             <div class="post-meta">
-              <span class="post-name">{post.user?.name || "Unknown"}</span>
+              <button 
+                class="name-btn" 
+                onclick={() => goToProfile(post.userId)}
+              >
+                <span class="post-name">{post.user?.name || "Unknown"}</span>
+              </button>
               <span class="post-time mono">{timeAgo(post.createdAt)}</span>
             </div>
           </div>
@@ -241,7 +325,7 @@
           {#if showComments[post.id]}
             <div class="comments-section">
               <div class="comment-input-row">
-                <div class="mini-avatar-sm">{getInitials("User")}</div>
+                <div class="mini-avatar-sm">👤</div>
                 <textarea
                   class="comment-textarea bangla"
                   placeholder="কমেন্ট লিখুন..."
@@ -257,7 +341,11 @@
                 {#each comments[post.id] as comment}
                   <div class="comment-row">
                     <div class="mini-avatar-sm">
-                      {getInitials(comment.user?.name || "?")}
+                      {#if comment.user?.profilePhoto}
+                        <img src={comment.user.profilePhoto} alt={comment.user?.name} class="avatar-img" />
+                      {:else}
+                        {getInitials(comment.user?.name || "?")}
+                      {/if}
                     </div>
                     <div class="comment-bubble">
                       <span class="comment-name">{comment.user?.name}</span>
@@ -274,6 +362,22 @@
           {/if}
         </div>
       {/each}
+      
+      {#if hasMore}
+        <div class="load-more-container">
+          <button 
+            class="load-more-btn" 
+            onclick={() => fetchPosts(false)}
+            disabled={loadingMore}
+          >
+            {#if loadingMore}
+              <Loader2 size={16} class="spin-anim" /> লোড হচ্ছে...
+            {:else}
+              আরও দেখুন
+            {/if}
+          </button>
+        </div>
+      {/if}
     {:else}
       <div class="empty-state">
         <div class="empty-icon">📰</div>
@@ -309,22 +413,8 @@
       padding: 1rem;
     }
   }
-  /* .press-header {
-    text-align: center;
-    padding: 6px 0 4px;
-  }
-  .press-title {
-    font-family: "Baloo Da 2", sans-serif;
-    font-size: 26px;
-    font-weight: 800;
-    color: #153f36;
-  }
-  .press-sub {
-    font-size: 13px;
-    color: #5b675f;
-    margin-top: 4px;
-  } */
-    .page-hero {
+  
+  .page-hero {
     position: relative;
     border-radius: 30px 46px 30px 30px;
     overflow: hidden;
@@ -343,7 +433,6 @@
     z-index: 1;
     padding: 28px;
   }
-  /* .hero-icon { color: #E9A23B; margin-bottom: 8px; } */
   .hero-title {
     font-family: 'Baloo Da 2', sans-serif;
     font-size: 32px;
@@ -356,22 +445,11 @@
     margin-top: 6px;
     font-family: 'Hind Siliguri', sans-serif;
   }
-  /* .hero-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 12px;
-    padding: 8px 16px;
-    background: #E9A23B;
-    color: #4A2E08;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    text-decoration: none;
-    font-family: 'Hind Siliguri', sans-serif;
-  } */
-.press-page .page-hero { background: linear-gradient(135deg, #1F5D50, #153F36); }
-  /* .spin-anim { animation: spin 1s linear infinite; color: #1F5D50; } */
+
+  .press-page .page-hero { 
+    background: linear-gradient(135deg, #1F5D50, #153F36); 
+  }
+  
   @keyframes spin {
     from {
       transform: rotate(0deg);
@@ -385,6 +463,25 @@
     padding: 3rem;
     color: #5b675f;
   }
+  
+  .error-text {
+    color: #B8503F;
+    font-size: 14px;
+  }
+  
+  .retry-btn {
+    margin-top: 12px;
+    padding: 8px 16px;
+    background: #1f5d50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Hind Siliguri', sans-serif;
+  }
+  .retry-btn:hover {
+    background: #153f36;
+  }
 
   .post-card {
     background: white;
@@ -392,12 +489,27 @@
     border-radius: 16px;
     padding: 16px;
     margin-top: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   }
   .post-head {
     display: flex;
     align-items: center;
     gap: 10px;
   }
+  
+  .avatar-btn, .name-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+  }
+  
+  .avatar-btn:hover .mini-avatar,
+  .name-btn:hover .post-name {
+    opacity: 0.7;
+  }
+  
   .mini-avatar {
     width: 38px;
     height: 38px;
@@ -411,7 +523,15 @@
     font-size: 14px;
     font-weight: 700;
     flex-shrink: 0;
+    overflow: hidden;
   }
+  
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
   .post-meta {
     flex: 1;
   }
@@ -419,6 +539,7 @@
     font-size: 14px;
     font-weight: 700;
     display: block;
+    color: #16231f;
   }
   .post-time {
     font-size: 12px;
@@ -429,6 +550,7 @@
     font-size: 14.5px;
     line-height: 1.65;
     margin: 12px 0;
+    color: #16231f;
   }
   .post-photos-grid {
     display: grid;
@@ -472,9 +594,11 @@
     border: none;
     cursor: pointer;
     border-radius: 8px;
+    transition: all 0.2s;
   }
   .post-action:hover {
     background: #f6f4ee;
+    color: #1f5d50;
   }
   .post-action.liked {
     color: #b8503f;
@@ -504,6 +628,7 @@
     font-size: 12px;
     font-weight: 700;
     flex-shrink: 0;
+    overflow: hidden;
   }
   .comment-textarea {
     flex: 1;
@@ -516,6 +641,9 @@
     resize: none;
     min-height: 36px;
   }
+  .comment-textarea:focus {
+    border-color: #1f5d50;
+  }
   .comment-send-btn {
     width: 32px;
     height: 32px;
@@ -527,6 +655,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.2s;
+  }
+  .comment-send-btn:hover {
+    background: #153f36;
   }
   .comment-row {
     display: flex;
@@ -543,16 +675,44 @@
     font-size: 12.5px;
     font-weight: 700;
     display: block;
+    color: #16231f;
   }
   .comment-text {
     font-size: 13.5px;
     margin-top: 2px;
+    color: #16231f;
   }
   .no-comments {
     text-align: center;
     font-size: 12px;
     color: #8b9790;
     padding: 12px;
+  }
+
+  .load-more-container {
+    text-align: center;
+    margin-top: 20px;
+  }
+  .load-more-btn {
+    padding: 10px 20px;
+    background: #1f5d50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Hind Siliguri', sans-serif;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .load-more-btn:hover {
+    background: #153f36;
+  }
+  .load-more-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
   }
 
   .empty-state {
