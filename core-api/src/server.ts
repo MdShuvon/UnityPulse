@@ -18,6 +18,7 @@ import { donationRoutes }     from './routes/donations';
 import { searchRoutes } from './routes/search';
 import { taskRoutes } from './routes/tasks';
 import { causeRoutes } from './routes/causes';
+import { adminCauseRoutes } from './routes/admin/causes';
 import { leaderboardRoutes }  from './routes/leaderboard';
 import { postRoutes }         from './routes/posts';
 import { photoRoutes }        from './routes/photos';
@@ -108,6 +109,7 @@ async function start() {
   await app.register(donationRoutes);
   await app.register(taskRoutes);
   await app.register(causeRoutes);
+  await app.register(adminCauseRoutes);
   await app.register(searchRoutes);
   await app.register(leaderboardRoutes);
   await app.register(postRoutes);

@@ -125,7 +125,10 @@
     <!-- Search and Filter -->
     <div class="controls-bar">
       <div class="search-wrapper">
-        <Search size={16} class="search-icon" />
+         <Search
+          size={18}
+          style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #8B9790; pointer-events: none;"
+        />
         <input 
           type="text" 
           class="search-input bangla" 

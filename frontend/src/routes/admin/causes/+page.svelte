@@ -62,7 +62,7 @@
                 </span>
               </div>
             </div>
-            <a href={`/admin/causes/${cause.id}/edit`} class="edit-btn">
+            <a href={`/admin/causes/create?edit=${cause.id}`} class="edit-btn">
               <Edit size={14} /> Edit
             </a>
           </div>

@@ -149,6 +149,87 @@ export class TaskService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+    // ── EDIT TASK ───────────────────────────────────────────────────────
+  async editTask(adminId: string, taskId: string, data: {
+    title?: string;
+    description?: string;
+    proofType?: string;
+    pointValue?: number;
+    deadline?: string | null;
+    status?: string;
+  }) {
+    const admin = await prisma.user.findUnique({
+      where: { id: adminId }, select: { role: true },
+    });
+
+    const task = await prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) throw new Error('Task পাওয়া যায়নি');
+
+    // Permission check
+    if (admin?.role !== 'SUPER_ADMIN' && task.createdBy !== adminId) {
+      throw new Error('Permission নেই');
+    }
+
+    // Build update data
+    const updateData: any = {};
+
+    if (data.title !== undefined) {
+      if (data.title.trim().length < 3) throw new Error('Title কমপক্ষে ৩ অক্ষর হতে হবে');
+      if (data.title.trim().length > 100) throw new Error('Title সর্বোচ্চ ১০০ অক্ষর হতে হবে');
+      updateData.title = data.title.trim();
+    }
+
+    if (data.description !== undefined) {
+      if (data.description.trim().length < 20) throw new Error('Description কমপক্ষে ২০ অক্ষর হতে হবে');
+      updateData.description = data.description.trim();
+    }
+
+    if (data.proofType !== undefined) {
+      if (!['PHOTO', 'TEXT', 'BOTH'].includes(data.proofType)) {
+        throw new Error('Invalid proof type');
+      }
+      updateData.proofType = data.proofType;
+    }
+
+    if (data.pointValue !== undefined) {
+      if (data.pointValue < 1 || data.pointValue > 500) {
+        throw new Error('Point value ১-৫০০ এর মধ্যে হতে হবে');
+      }
+      updateData.pointValue = data.pointValue;
+    }
+
+    if (data.deadline !== undefined) {
+      const taskDate = data.deadline ? new Date(data.deadline) : new Date('2099-12-31');
+      taskDate.setHours(0, 0, 0, 0);
+      updateData.date = taskDate;
+    }
+
+    if (data.status !== undefined) {
+      if (!['OPEN', 'CLOSED'].includes(data.status)) {
+        throw new Error('Invalid status');
+      }
+      updateData.status = data.status;
+    }
+
+    // Update task
+    const updatedTask = await prisma.task.update({
+      where: { id: taskId },
+      data: updateData,
+      include: {
+        org: { select: { id: true, name: true } },
+        _count: { select: { submissions: true } },
+      },
+    });
+
+    await auditService.log(
+      'TASK_UPDATED',
+      'Task', taskId, adminId,
+      { updatedFields: Object.keys(updateData) }
+    );
+
+    return updatedTask;
+  }
   // ── GET TASK DETAIL ─────────────────────────────────────────────────
   async getTaskDetail(taskId: string, userId: string | null) {
     const task = await prisma.task.findUnique({

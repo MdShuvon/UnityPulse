@@ -31,23 +31,12 @@ export async function adminTaskRoutes(app: FastifyInstance) {
   });
 
     // PATCH /admin/tasks/:id — task status toggle (OPEN/CLOSED)
-  app.patch('/admin/tasks/:id', { preHandler: requireAdmin }, async (req, reply) => {
-    const adminId = (req.session as any).userId;
-    const { id } = req.params as { id: string };
-    const { status } = req.body as any;
-    
-    if (!['OPEN', 'CLOSED'].includes(status)) {
-      return reply.code(400).send({ error: 'Invalid status' });
-    }
-    
-    const task = await taskService.getAdminTasks(adminId);
-    const found = task.find(t => t.id === id);
-    
-    if (!found) {
-      return reply.code(403).send({ error: 'Permission denied' });
-    }
-    
-    const result = await taskService.updateTaskStatus(adminId, id, status);
-    return reply.send(result);
-  });
+// PATCH /admin/tasks/:id - Edit task (title, description, proofType, pointValue, deadline, status)
+app.patch('/admin/tasks/:id', { preHandler: requireAdmin }, async (req, reply) => {
+  const adminId = (req.session as any).userId;
+  const { id } = req.params as { id: string };
+  const data = req.body as any;
+  
+  return reply.send(await taskService.editTask(adminId, id, data));
+});
 }

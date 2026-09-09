@@ -62,13 +62,17 @@
       <div class="loading-state"><p>{error}</p></div>
     {:else if cause}
       <!-- Hero Section -->
-      <div class="detail-hero">
-        <div class="art" style={`background: ${cause.coverImage ? `url(${cause.coverImage})` : 'linear-gradient(135deg, #2E7A69, #153F36)'}`}></div>
-        <div class="overlay">
-          <div class="title">{cause.title}</div>
-          <div class="sub bangla">{cause.story?.slice(0, 120)}...</div>
-        </div>
-      </div>
+<div class="detail-hero">
+  {#if cause.coverImage}
+    <img src={cause.coverImage} alt={cause.title} class="hero-img" />
+  {:else}
+    <div class="hero-fallback"></div>
+  {/if}
+  <div class="overlay">
+    <div class="title">{cause.title}</div>
+    <div class="sub bangla">{cause.story?.slice(0, 120)}...</div>
+  </div>
+</div>
 
       <!-- Tabs -->
       <div class="tab-bar">
@@ -213,27 +217,40 @@
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   .loading-state { text-align: center; padding: 3rem; color: #5B675F; }
 
-  .detail-hero {
+.detail-hero {
     position: relative;
     border-radius: 30px 46px 30px 30px;
     overflow: hidden;
-  }
-  .detail-hero .art {
+    min-height: 3500px;
+    display: flex;
+    align-items: flex-end;
+}
+.hero-img {
     position: absolute;
     inset: 0;
-    background-size: cover;
-    background-position: center;
-  }
-  .detail-hero .overlay {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background-color: #153F36;
+}
+.hero-fallback {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #2E7A69, #153F36);
+}
+.detail-hero .overlay {
     position: relative;
     z-index: 1;
-    height: 100%;
+    width: 100%;
+    min-height: 350px;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     padding: 22px;
     background: linear-gradient(to top, rgba(10,16,13,0.85) 10%, rgba(10,16,13,0.1) 65%, transparent 100%);
-  }
+}
   .detail-hero .title {
     font-family: 'Baloo Da 2', sans-serif;
     font-size: 22px;

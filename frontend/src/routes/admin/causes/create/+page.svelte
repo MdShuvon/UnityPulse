@@ -1,8 +1,7 @@
-<!-- src/routes/admin/causes/create/+page.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { Loader2, ArrowLeft, Save, Image, Upload, X } from 'lucide-svelte';
+  import { Loader2, ArrowLeft, Save, Upload, X } from 'lucide-svelte';
 
   let isLoading = $state(false);
   let isUploading = $state(false);
@@ -11,6 +10,9 @@
   let coverImage = $state('');
   let coverPreview = $state('');
   let isFeatured = $state(false);
+  let isEditMode = $state(false);
+  let causeId = $state<string | null>(null);
+  let isCheckingAuth = $state(true);
   let error = $state('');
   let success = $state('');
 
@@ -19,7 +21,6 @@
     const file = target.files?.[0];
     if (!file) return;
 
-    // Validate
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       error = 'শুধু JPG, PNG, WebP ফাইল দিন';
       return;
@@ -62,6 +63,27 @@
     coverPreview = '';
   }
 
+  async function fetchCauseForEdit(id: string) {
+    try {
+      const res = await fetch('http://localhost:3001/admin/causes', {
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const causes = await res.json();
+        const cause = causes.find((c: any) => c.id === id);
+        if (cause) {
+          title = cause.title || '';
+          story = cause.story || '';
+          coverImage = cause.coverImage || '';
+          coverPreview = cause.coverImage || '';
+          isFeatured = cause.isFeatured || false;
+        }
+      }
+    } catch (err) {
+      error = 'Cause লোড করতে সমস্যা হয়েছে';
+    }
+  }
+
   async function handleSubmit() {
     if (!title.trim() || !story.trim()) {
       error = 'Title এবং Story আবশ্যক';
@@ -73,8 +95,12 @@
     success = '';
 
     try {
-      const res = await fetch('http://localhost:3001/admin/causes', {
-        method: 'POST',
+      const url = isEditMode && causeId
+        ? `http://localhost:3001/admin/causes/${causeId}`
+        : 'http://localhost:3001/admin/causes';
+
+      const res = await fetch(url, {
+        method: isEditMode ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
@@ -88,10 +114,10 @@
       const data = await res.json();
 
       if (res.ok) {
-        success = 'Cause তৈরি হয়েছে!';
+        success = isEditMode ? 'Cause আপডেট হয়েছে!' : 'Cause তৈরি হয়েছে!';
         setTimeout(() => goto('/admin/causes'), 1000);
       } else {
-        error = data.error || 'Cause তৈরি করতে সমস্যা হয়েছে';
+        error = data.error || 'Cause তৈরি/আপডেট করতে সমস্যা হয়েছে';
       }
     } catch (err) {
       error = 'সার্ভারে সমস্যা হয়েছে';
@@ -99,6 +125,38 @@
       isLoading = false;
     }
   }
+
+  onMount(async () => {
+    try {
+      const authRes = await fetch('http://localhost:3001/auth/me', {
+        credentials: 'include',
+      });
+      
+      if (!authRes.ok) {
+        goto('/login?redirect=/admin/causes/create');
+        return;
+      }
+      
+      const user = await authRes.json();
+      
+      if (user.role !== 'SUPER_ADMIN') {
+        goto('/admin/causes');
+        return;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('edit');
+      if (id) {
+        isEditMode = true;
+        causeId = id;
+        fetchCauseForEdit(id);
+      }
+    } catch (err) {
+      goto('/login?redirect=/admin/causes/create');
+    } finally {
+      isCheckingAuth = false;
+    }
+  });
 </script>
 
 <div class="admin-page">
@@ -107,68 +165,76 @@
   </button>
 
   <div class="page-header">
-    <h1 class="page-title">নতুন Cause তৈরি করুন</h1>
+    <h1 class="page-title">{isEditMode ? 'Cause Edit করুন' : 'নতুন Cause তৈরি করুন'}</h1>
+    <p class="page-sub bangla">{isEditMode ? 'Cause তথ্য আপডেট করুন' : 'Community Cause তৈরি করুন'}</p>
   </div>
 
-  <div class="form-card">
-    <div class="form-group">
-      <span class="form-label">Cover Image</span>
-      
-      {#if coverPreview}
-        <div class="image-preview-wrap">
-          <img src={coverPreview} alt="Cover Preview" class="image-preview" />
-          <button class="remove-image-btn" onclick={removeImage} aria-label="Remove image">
-            <X size={18} />
-          </button>
-        </div>
-      {:else}
-        <label class="upload-box">
-          <Upload size={32} />
-          <span class="upload-text">ছবি আপলোড করুন</span>
-          <span class="upload-hint">JPG, PNG, WebP · সর্বোচ্চ ১০MB</span>
-          <input type="file" accept="image/jpeg,image/png,image/webp" onchange={handleImageUpload} style="display:none;" />
+  {#if isCheckingAuth}
+    <div class="loading-state">
+      <Loader2 size={48} class="spin-anim" />
+      <p>চেক করা হচ্ছে...</p>
+    </div>
+  {:else}
+    <div class="form-card">
+      <div class="form-group">
+        <span class="form-label">Cover Image</span>
+        
+        {#if coverPreview}
+          <div class="image-preview-wrap">
+            <img src={coverPreview} alt="Cover Preview" class="image-preview" />
+            <button class="remove-image-btn" onclick={removeImage} aria-label="Remove image">
+              <X size={18} />
+            </button>
+          </div>
+        {:else}
+          <label class="upload-box">
+            <Upload size={32} />
+            <span class="upload-text">ছবি আপলোড করুন</span>
+            <span class="upload-hint">JPG, PNG, WebP · সর্বোচ্চ ১০MB</span>
+            <input type="file" accept="image/jpeg,image/png,image/webp" onchange={handleImageUpload} style="display:none;" />
+          </label>
+        {/if}
+
+        {#if isUploading}
+          <div class="uploading-indicator">
+            <Loader2 size={16} class="spin-anim" /> আপলোড হচ্ছে...
+          </div>
+        {/if}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="cause-title">Cause Title *</label>
+        <input id="cause-title" class="form-input bangla" placeholder="যেমন: নেপাল বন্যা ত্রাণ ২০২৬" bind:value={title} />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="cause-story">Story / বিবরণ *</label>
+        <textarea id="cause-story" class="form-input bangla" rows="6" placeholder="Cause-এর বিস্তারিত গল্প লিখুন..." bind:value={story}></textarea>
+      </div>
+
+      <div class="form-group checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" bind:checked={isFeatured} />
+          <span>Home page-এ Featured হিসেবে দেখান</span>
         </label>
+      </div>
+
+      {#if error}
+        <div class="error-box bangla">{error}</div>
+      {/if}
+      {#if success}
+        <div class="success-box bangla">{success}</div>
       {/if}
 
-      {#if isUploading}
-        <div class="uploading-indicator">
-          <Loader2 size={16} class="spin-anim" /> আপলোড হচ্ছে...
-        </div>
-      {/if}
+      <button class="btn btn-primary submit-btn" onclick={handleSubmit} disabled={isLoading || isUploading}>
+        {#if isLoading}
+          <Loader2 size={16} class="spin-anim" /> {isEditMode ? 'আপডেট হচ্ছে...' : 'তৈরি হচ্ছে...'}
+        {:else}
+          <Save size={16} /> {isEditMode ? 'আপডেট করুন' : 'Cause তৈরি করুন'}
+        {/if}
+      </button>
     </div>
-
-    <div class="form-group">
-      <label class="form-label" for="cause-title">Cause Title</label>
-      <input id="cause-title" class="form-input bangla" placeholder="যেমন: নেপাল বন্যা ত্রাণ ২০২৬" bind:value={title} />
-    </div>
-
-    <div class="form-group">
-      <label class="form-label" for="cause-story">Story / বিবরণ</label>
-      <textarea id="cause-story" class="form-input bangla" rows="6" placeholder="Cause-এর বিস্তারিত গল্প লিখুন..." bind:value={story}></textarea>
-    </div>
-
-    <div class="form-group checkbox-group">
-      <label class="checkbox-label">
-        <input type="checkbox" bind:checked={isFeatured} />
-        <span>Home page-এ Featured হিসেবে দেখান</span>
-      </label>
-    </div>
-
-    {#if error}
-      <div class="error-box bangla">{error}</div>
-    {/if}
-    {#if success}
-      <div class="success-box bangla">{success}</div>
-    {/if}
-
-    <button class="btn btn-primary submit-btn" onclick={handleSubmit} disabled={isLoading || isUploading}>
-      {#if isLoading}
-        <Loader2 size={16} class="spin-anim" /> তৈরি হচ্ছে...
-      {:else}
-        <Save size={16} /> Cause তৈরি করুন
-      {/if}
-    </button>
-  </div>
+  {/if}
 </div>
 
 <style>
@@ -187,13 +253,14 @@
     font-family: 'Hind Siliguri', sans-serif;
   }
   .back-btn:hover { color: #1F5D50; }
+  .page-header { margin-bottom: 16px; }
   .page-title {
     font-family: 'Baloo Da 2', sans-serif;
     font-size: 22px;
     font-weight: 700;
     color: #153F36;
-    margin-bottom: 16px;
   }
+  .page-sub { font-size: 13px; color: #5B675F; margin-top: 4px; font-family: 'Hind Siliguri', sans-serif; }
   .form-card {
     background: white;
     border: 1px solid #E4EDE9;
@@ -296,6 +363,12 @@
     cursor: pointer;
     font-family: 'Hind Siliguri', sans-serif;
   }
+  .checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #1F5D50;
+    cursor: pointer;
+  }
   .error-box {
     background: #FDF0ED;
     border: 1px solid #F5C6CB;
@@ -304,6 +377,7 @@
     padding: 12px;
     margin-bottom: 12px;
     font-size: 13px;
+    font-family: 'Hind Siliguri', sans-serif;
   }
   .success-box {
     background: #EAF4EE;
@@ -313,6 +387,7 @@
     padding: 12px;
     margin-bottom: 12px;
     font-size: 13px;
+    font-family: 'Hind Siliguri', sans-serif;
   }
   .btn {
     display: inline-flex;
@@ -330,6 +405,7 @@
   .btn-primary:hover { background: #153F36; }
   .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
   .submit-btn { width: 100%; justify-content: center; }
-  /* .spin-anim { animation: spin 1s linear infinite; } */
+  .loading-state { text-align: center; padding: 3rem; color: #5B675F; }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  /* .spin-anim { animation: spin 1s linear infinite; } */
 </style>

@@ -4,6 +4,8 @@ export type AuditAction =
   | 'DONATION_CREATED'
   | 'TASK_APPROVED'
   | 'TASK_REJECTED'
+  | 'TASK_CREATED'      // line 5-এর পরে
+  | 'TASK_UPDATED'      // line 6-এর পরে
   | 'KYC_APPROVED'
   | 'KYC_REJECTED'
   | 'PAYMENT_VERIFIED'
