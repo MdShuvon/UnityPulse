@@ -49,7 +49,7 @@
 <div class="home-page">
   <main class="main-content">
     <!-- Featured Cause Grid -->
-    <section class="cause-section">
+<section class="cause-section">
       <div class="section-label">সক্রিয় Cause · এই মুহূর্তে চলছে</div>
       
       {#if isLoading}
@@ -67,7 +67,11 @@
           <!-- Big Card -->
           {#if featuredCause[0]}
           <div class="cause-big" onclick={() => goto(`/causes/${featuredCause[0].id}`)} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && goto(`/causes/${featuredCause[0].id}`)}>
-            <div class="art" style={`background: ${featuredCause[0].coverImage ? `url(${featuredCause[0].coverImage})` : 'linear-gradient(135deg, #2E7A69, #153F36)'}`}></div>
+            {#if featuredCause[0].coverImage}
+              <img src={featuredCause[0].coverImage} alt={featuredCause[0].title} class="big-img" />
+            {:else}
+              <div class="big-fallback"></div>
+            {/if}
             <div class="overlay">
               <span class="prio-badge"><span class="prio-dot"></span>Featured</span>
               <div class="title">{featuredCause[0].title}</div>
@@ -82,9 +86,15 @@
           <div class="cause-mini-col">
             {#each featuredCause.slice(1, 5) as cause}
               <div class="cause-mini" onclick={() => goto(`/causes/${cause.id}`)} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && goto(`/causes/${cause.id}`)}>
-                <div class="thumb" style={`background: ${cause.coverImage ? `url(${cause.coverImage})` : 'linear-gradient(135deg, #1F5D50, #153F36)'}`}></div>
+                <div class="thumb">
+                  {#if cause.coverImage}
+                    <img src={cause.coverImage} alt={cause.title} class="thumb-img" />
+                  {:else}
+                    <div class="thumb-fallback"></div>
+                  {/if}
+                </div>
                 <div class="info">
-                  <div class="cat" style="color: #1F5D50">{cause.projects?.length || 0} Projects</div>
+                  <div class="cat">{cause.projects?.length || 0} Projects</div>
                   <div class="title">{cause.title}</div>
                   <div class="date mono">{new Date(cause.createdAt).toLocaleDateString('bn-BD')}</div>
                 </div>
@@ -236,12 +246,20 @@
     transition: transform 0.18s ease;
   }
   .cause-big:hover { transform: translateY(-2px); }
-  .cause-big .art {
+.big-img {
     position: absolute;
     inset: 0;
-    background-size: cover;
-    background-position: center;
-  }
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.big-fallback {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #2E7A69, #153F36);
+}
   .cause-big .overlay {
     position: relative;
     z-index: 1;
@@ -293,6 +311,7 @@
     cursor: pointer;
   }
   .cause-mini-col { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  
   .cause-mini {
     background: white;
     border: 1px solid #E4EDE9;
@@ -300,36 +319,68 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px;
+    padding: 12px;
     flex: 1;
     cursor: pointer;
     transition: border-color 0.15s ease, transform 0.15s ease;
-  }
-  .cause-mini:hover { border-color: #1F5D50; transform: translateY(-1px); }
-  .cause-mini .thumb {
-    width: 56px;
-    height: 56px;
-    border-radius: 14px;
+}
+.cause-mini .thumb {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
     flex-shrink: 0;
-    background-size: cover;
-    background-position: center;
-  }
-  .cause-mini .info { flex: 1; min-width: 0; }
-  .cause-mini .cat { font-size: 10px; font-weight: 700; margin-bottom: 2px; }
-  .cause-mini .title { font-size: 13px; font-weight: 700; line-height: 1.3; }
-  .cause-mini .date { font-family: 'DM Mono', monospace; font-size: 10px; color: #5B675F; margin-top: 4px; }
-  .cause-mini .go {
-    width: 28px;
-    height: 28px;
+    overflow: hidden;
+}
+.thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.thumb-fallback {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1F5D50, #153F36);
+}
+.cause-mini .info { 
+    flex: 1; 
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+}
+.cause-mini .cat { 
+    font-size: 10px; 
+    font-weight: 700; 
+    margin-bottom: 0;
+    color: #1F5D50;
+}
+.cause-mini .title { 
+    font-size: 13.5px; 
+    font-weight: 700; 
+    line-height: 1.3;
+    color: #16231F;
+}
+.cause-mini .date { 
+    font-family: 'DM Mono', monospace; 
+    font-size: 10px; 
+    color: #5B675F; 
+    margin-top: 0;
+}
+.cause-mini .go {
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background: #E4EDE9;
     color: #153F36;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 16px;
     flex-shrink: 0;
-  }
+}
+
   .empty-cause {
     background: white;
     border: 1px dashed #E4EDE9;
