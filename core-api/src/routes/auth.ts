@@ -113,9 +113,9 @@ export async function authRoutes(app: FastifyInstance) {
       req.session.userId = user.id;
       req.session.role = user.role;
       
-      // Redirect to frontend dashboard
+      // Redirect to frontend home
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-      return reply.redirect(`${frontendUrl}/dashboard`);
+      return reply.redirect(`${frontendUrl}/home`);
       
     } catch (error: any) {
       console.error('Google OAuth error:', error);

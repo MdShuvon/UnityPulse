@@ -2,7 +2,7 @@ import { prisma }               from '../lib/prisma';
 import { fileService }         from './fileService';
 import { notificationService } from './notificationService';
 import { auditService }        from './auditService';
-import { dashboardService }    from './dashboardService';
+import { homeService }    from './homeService';
 
 export class LocalAdminService {
 
@@ -114,7 +114,7 @@ export class LocalAdminService {
       `আপনার organization "${result.application.orgName}" approve হয়েছে!`,
       result.org.id
     );
-    await dashboardService.invalidateStats();
+    await homeService.invalidateStats();
     await auditService.log('LOCAL_ADMIN_APPROVED', 'LocalAdminApplication', applicationId, superAdminId, { orgId: result.org.id });
 
     return { message: 'Approved। Organization তৈরি হয়েছে।' };
@@ -157,7 +157,7 @@ export class LocalAdminService {
       );
     }
 
-    await dashboardService.invalidateStats();
+    await homeService.invalidateStats();
     await auditService.log('LOCAL_ADMIN_REVOKED', 'User', userId, superAdminId, { reason, orgId: org?.id });
     return { message: 'Local admin revoke হয়েছে।' };
   }

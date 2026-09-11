@@ -366,7 +366,7 @@
     font-family: "DM Mono", monospace;
   }
 
-  /* .dashboard-header { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1.5rem; background: #FFFFFF; border-bottom: 1px solid #E4EDE9; position: sticky; top: 0; z-index: 100; } */
+  /* .home-header { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1.5rem; background: #FFFFFF; border-bottom: 1px solid #E4EDE9; position: sticky; top: 0; z-index: 100; } */
   /* .header-left { display: flex; align-items: center; } */
   /* .brand { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; } */
   /* .brand-icon { color: #1F5D50; } */

@@ -23,7 +23,7 @@ import { leaderboardRoutes }  from './routes/leaderboard';
 import { postRoutes }         from './routes/posts';
 import { photoRoutes }        from './routes/photos';
 import { careerRoutes }       from './routes/career';
-import { dashboardRoutes }    from './routes/dashboard';
+import { homeRoutes }    from './routes/home';
 import { notificationRoutes } from './routes/notifications';
 import { localAdminRoutes }   from './routes/localAdmin';
 
@@ -115,7 +115,7 @@ async function start() {
   await app.register(postRoutes);
   await app.register(photoRoutes);
   await app.register(careerRoutes);
-  await app.register(dashboardRoutes);
+  await app.register(homeRoutes);
   await app.register(notificationRoutes);
   await app.register(localAdminRoutes);
   await app.register(passwordResetRoutes);

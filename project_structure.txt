@@ -14408,7 +14408,7 @@ D:.
 |       +---routes
 |       |   |   auth.ts
 |       |   |   career.ts
-|       |   |   dashboard.ts
+|       |   |   home.ts
 |       |   |   donations.ts
 |       |   |   leaderboard.ts
 |       |   |   localAdmin.ts
@@ -14599,7 +14599,7 @@ D:.
 |   |               |           \---status
 |   |               |                   $types.d.ts
 |   |               |                   
-|   |               +---dashboard
+|   |               +---home
 |   |               |       $types.d.ts
 |   |               |       
 |   |               +---donate
@@ -19465,10 +19465,10 @@ D:.
 |   |   |           |       layers.js
 |   |   |           |       layers.svelte
 |   |   |           |       layers.svelte.d.ts
-|   |   |           |       layout-dashboard.d.ts
-|   |   |           |       layout-dashboard.js
-|   |   |           |       layout-dashboard.svelte
-|   |   |           |       layout-dashboard.svelte.d.ts
+|   |   |           |       layout-home.d.ts
+|   |   |           |       layout-home.js
+|   |   |           |       layout-home.svelte
+|   |   |           |       layout-home.svelte.d.ts
 |   |   |           |       layout-freeform.d.ts
 |   |   |           |       layout-freeform.js
 |   |   |           |       layout-freeform.svelte
@@ -28636,10 +28636,10 @@ D:.
 |   |   |       |       layers.js
 |   |   |       |       layers.svelte
 |   |   |       |       layers.svelte.d.ts
-|   |   |       |       layout-dashboard.d.ts
-|   |   |       |       layout-dashboard.js
-|   |   |       |       layout-dashboard.svelte
-|   |   |       |       layout-dashboard.svelte.d.ts
+|   |   |       |       layout-home.d.ts
+|   |   |       |       layout-home.js
+|   |   |       |       layout-home.svelte
+|   |   |       |       layout-home.svelte.d.ts
 |   |   |       |       layout-grid.d.ts
 |   |   |       |       layout-grid.js
 |   |   |       |       layout-grid.svelte
@@ -34772,7 +34772,7 @@ D:.
 |   |       |           \---status
 |   |       |                   +page.svelte
 |   |       |                   
-|   |       +---dashboard
+|   |       +---home
 |   |       |       +page.svelte
 |   |       |       
 |   |       +---donate

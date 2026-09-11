@@ -4,10 +4,10 @@ import { redis }  from '../lib/redis';
 const STATS_TTL      = 300; // 5 minutes
 const HIGHLIGHTS_TTL = 60;  // 1 minute
 
-export class DashboardService {
+export class HomeService {
 
   async getStats() {
-    const cacheKey = 'dashboard:stats';
+    const cacheKey = 'home:stats';
     const cached   = await redis.get(cacheKey);
     if (cached) return JSON.parse(cached);
 
@@ -40,7 +40,7 @@ export class DashboardService {
   }
 
   async getHighlights() {
-    const cacheKey = 'dashboard:highlights';
+    const cacheKey = 'home:highlights';
     const cached   = await redis.get(cacheKey);
     if (cached) return JSON.parse(cached);
 
@@ -92,8 +92,8 @@ export class DashboardService {
     });
   }
 
-  async invalidateStats()      { await redis.del('dashboard:stats'); }
-  async invalidateHighlights() { await redis.del('dashboard:highlights'); }
+  async invalidateStats()      { await redis.del('home:stats'); }
+  async invalidateHighlights() { await redis.del('home:highlights'); }
 }
 
-export const dashboardService = new DashboardService();
+export const homeService = new HomeService();
