@@ -1,0 +1,1 @@
+<!-- frontend/src/routes/admin/donations/[id]/+page.svelte -->

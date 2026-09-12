@@ -1,8 +1,10 @@
+//core-api/src/routes/admin/donations.ts
 import { FastifyInstance }  from 'fastify';
 import { donationService }  from '../../services/donationService';
 import { requireAdmin }     from '../../middleware/authGuard';
 import { randomUUID } from 'crypto';
 import { minioClient, BUCKET } from '../../lib/minio';
+import { prisma } from '../../lib/prisma';
 import {
   createProjectSchema,
   updateProjectSchema,
@@ -24,6 +26,30 @@ function getExtensionFromContentType(contentType: string): string {
   };
   return map[contentType] || 'bin';
 }
+// GET /admin/organizations — SUPER_ADMIN-এর জন্য সব org list
+app.get('/admin/organizations', { preHandler: requireAdmin }, async (req, reply) => {
+  const adminId = (req.session as any).userId;
+  const admin = await prisma.user.findUnique({
+    where: { id: adminId },
+    select: { role: true },
+  });
+
+  if (admin?.role === 'SUPER_ADMIN') {
+    const orgs = await prisma.organization.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    });
+    return reply.send(orgs);
+  }
+
+  // LOCAL_ADMIN — শুধু নিজের org
+  const adminOrg = await prisma.organization.findFirst({
+    where: { adminId },
+    select: { id: true, name: true },
+  });
+  return reply.send(adminOrg ? [adminOrg] : []);
+});
 
 // POST /admin/uploads/presign
 app.post('/admin/uploads/presign',

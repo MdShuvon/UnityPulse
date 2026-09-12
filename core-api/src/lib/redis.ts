@@ -1,5 +1,8 @@
 import Redis from 'ioredis';
 import EventEmitter from 'events';
+
+
+export const EXCHANGE_RATES_CACHE_KEY = 'exchange_rates:bdt';
 export const notificationEmitter = new EventEmitter();
 
 const config = {

@@ -4,8 +4,9 @@ export const createProjectSchema = z.object({
   title:       z.string().min(3, 'কমপক্ষে ৩ অক্ষর'),
   description: z.string().min(10),
   goalAmount:  z.number().positive('Goal amount ০ এর বেশি হতে হবে'),
-  orgId:       z.string().min(1),
+  orgId:       z.string().optional(),
   deadline:    z.string().optional(),
+  coverImage:  z.string().optional(),
 });
 
 export const updateProjectSchema = z.object({

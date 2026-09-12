@@ -1,3 +1,4 @@
+<!-- frontend/src/routes/admin/donations/create/+page.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -18,6 +19,33 @@
   let formError = $state('');
   let showToast = $state(false);
   let toastMessage = $state('');
+  let user = $state<any>(null);
+  let organizations = $state<any[]>([]);
+  let selectedOrgId = $state('');
+
+async function fetchUserAndOrgs() {
+  try {
+    // Get current user
+    const userRes = await fetch('http://localhost:3001/auth/me', {
+      credentials: 'include',
+    });
+    if (userRes.ok) {
+      user = await userRes.json();
+      
+      // SUPER_ADMIN হলে org list fetch করো
+      if (user.role === 'SUPER_ADMIN') {
+        const orgRes = await fetch('http://localhost:3001/admin/organizations', {
+          credentials: 'include',
+        });
+        if (orgRes.ok) {
+          organizations = await orgRes.json();
+        }
+      }
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
 
   function validate(): boolean {
     const newErrors: { [field: string]: string } = {};
@@ -38,6 +66,11 @@
       newErrors.goalAmount = 'Goal amount দিন';
     } else if (goalAmount < 1) {
       newErrors.goalAmount = 'কমপক্ষে ১';
+    }
+
+    // SUPER_ADMIN হলে orgId required
+    if (user?.role === 'SUPER_ADMIN' && !selectedOrgId) {
+      newErrors.orgId = 'Organization নির্বাচন করুন';
     }
 
     errors = newErrors;
@@ -115,6 +148,7 @@
           title = project.title || '';
           description = project.description || '';
           goalAmount = project.goalAmount || null;
+          selectedOrgId = project.orgId || '';  // ✅ Add this
           if (project.deadline) {
             deadline = project.deadline.split('T')[0];
             noDeadline = false;
@@ -150,6 +184,7 @@
         description: description.trim(),
         goalAmount: Number(goalAmount),
         deadline: noDeadline ? null : deadline || null,
+        orgId: selectedOrgId || undefined,
       };
 
       if (coverImageUrl) {
@@ -181,16 +216,18 @@
       isSubmitting = false;
     }
   }
-
   onMount(() => {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('id');
-    if (id) {
-      isEditMode = true;
-      projectId = id;
-      fetchProjectForEdit(id);
-    }
+  fetchUserAndOrgs();
+  
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (id) {
+    isEditMode = true;
+    projectId = id;
+    fetchProjectForEdit(id);
+  }
   });
+
 </script>
 
 <div class="donation-form-page">
@@ -219,6 +256,26 @@
         <p class="upload-hint bangla">আপলোড হচ্ছে...</p>
       {/if}
     </div>
+    {#if user?.role === 'SUPER_ADMIN'}
+  <div class="form-group">
+    <label class="form-label" for="proj-org">Organization নির্বাচন করুন *</label>
+    <select 
+      id="proj-org" 
+      class="form-input bangla" 
+      bind:value={selectedOrgId}
+      class:input-error={errors.orgId}
+    >
+      <option value="">-- Organization বেছে নিন --</option>
+      {#each organizations as org}
+        <option value={org.id}>{org.name}</option>
+      {/each}
+    </select>
+    {#if errors.orgId}
+      <p class="error-text bangla">{errors.orgId}</p>
+    {/if}
+  </div>
+{/if}
+
 
     <div class="form-group">
       <label class="form-label" for="proj-title">Title *</label>

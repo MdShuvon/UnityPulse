@@ -15,6 +15,7 @@ import { authRoutes }         from './routes/auth';
 import { profileRoutes }      from './routes/profile';
 import { orgRoutes }          from './routes/organizations';
 import { donationRoutes }     from './routes/donations';
+import { exchangeRateRoutes } from './routes/exchangeRate';
 import { searchRoutes } from './routes/search';
 import { taskRoutes } from './routes/tasks';
 import { causeRoutes } from './routes/causes';
@@ -107,6 +108,7 @@ async function start() {
   await app.register(profileRoutes);
   await app.register(orgRoutes);
   await app.register(donationRoutes);
+  await app.register(exchangeRateRoutes);
   await app.register(taskRoutes);
   await app.register(causeRoutes);
   await app.register(adminCauseRoutes);
