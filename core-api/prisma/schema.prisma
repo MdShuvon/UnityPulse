@@ -49,6 +49,7 @@ model User {
   followers        Follow[]               @relation("Follower")
   following        Follow[]               @relation("Following")
   adminApplication LocalAdminApplication?
+  donationProjects DonationProject[]      @relation("ProjectCreator")
 
   accountStatus     String?   @default("ACTIVE")
   suspendedAt       DateTime?
@@ -135,11 +136,13 @@ model DonationProject {
 
   org           Organization       @relation(fields: [orgId], references: [id])
   cause         Cause?             @relation(fields: [causeId], references: [id])
+  creator       User               @relation("ProjectCreator", fields: [createdBy], references: [id])
   donations     Donation[]
   expenses      ProjectExpense[]
   joinRequests  CauseJoinRequest[]
 
   @@index([causeId])
+  @@index([createdBy])
 }
 
 model FaqItem {

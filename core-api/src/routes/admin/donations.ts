@@ -136,4 +136,26 @@ app.post('/admin/uploads/presign',
       return reply.send(result);
     }
   );
+
+  // POST /admin/donations/projects/:id/notify-creator — SUPER_ADMIN → creator-কে notify
+  app.post('/admin/donations/projects/:id/notify-creator',
+    { preHandler: requireAdmin },
+    async (req, reply) => {
+      try {
+        const adminId = (req.session as any).userId;
+        const { id } = req.params as { id: string };
+        const { problemType, problemDetails } = req.body as any;
+        
+        const result = await donationService.notifyCreator(
+          adminId, 
+          id, 
+          problemType || 'OTHER',
+          problemDetails || ''
+        );
+        return reply.send(result);
+      } catch (err: any) {
+        return reply.code(403).send({ error: err.message });
+      }
+    }
+  );
 }

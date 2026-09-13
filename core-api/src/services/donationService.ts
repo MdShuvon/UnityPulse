@@ -113,12 +113,21 @@ export class DonationService {
       where: { id: adminId },
       select: { role: true },
     });
-
+    
     if (requester?.role === 'SUPER_ADMIN') {
       return prisma.donationProject.findMany({
         include: {
           _count: { select: { donations: true } },
           org: { select: { id: true, name: true } },
+          // ✅ Creator info add করুন
+          creator: { 
+            select: { 
+              id: true, 
+              name: true, 
+              email: true,
+              phone: true,
+            } 
+          },
         },
         orderBy: { createdAt: 'desc' },
       });
@@ -351,6 +360,60 @@ export class DonationService {
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  // ── NOTIFY CREATOR (SUPER_ADMIN only) ─────────────
+  async notifyCreator(
+    adminId: string,
+    projectId: string,
+    problemType: string,
+    problemDetails: string,
+  ) {
+    const requester = await prisma.user.findUnique({
+      where: { id: adminId },
+      select: { role: true, name: true },
+    });
+
+    if (requester?.role !== 'SUPER_ADMIN') {
+      throw new Error('শুধু SUPER_ADMIN creator-কে notify করতে পারবে');
+    }
+
+    if (!problemDetails || problemDetails.trim().length < 10) {
+      throw new Error('সমস্যার বিবরণ কমপক্ষে ১০ অক্ষর দিতে হবে');
+    }
+
+    const project = await prisma.donationProject.findUnique({
+      where: { id: projectId },
+      include: {
+        creator: { select: { id: true, name: true } },
+      },
+    });
+    if (!project) throw new Error('Project পাওয়া যায়নি');
+
+    if (project.createdBy === adminId) {
+      throw new Error('নিজের project-এ notify করার দরকার নেই');
+    }
+
+    const typeLabel: Record<string, string> = {
+      ENCODING: 'Bengali encoding ভুল',
+      CONTENT:  'Content inappropriate',
+      AMOUNT:   'Amount/Goal ভুল',
+      OTHER:    'অন্য সমস্যা',
+    };
+
+    const typeText = typeLabel[problemType] || 'সমস্যা';
+
+    await notificationService.send(
+      project.createdBy,
+      'PROJECT_ISSUE_REPORTED',
+      `[${typeText}] "${project.title}" project-এ সমস্যা — ${problemDetails}\n\n(Reported by SUPER_ADMIN ${requester.name})`,
+      projectId
+    );
+
+    return { 
+      message: 'Creator-কে notify করা হয়েছে',
+      creatorName: project.creator.name,
+    };
   }
 }
 

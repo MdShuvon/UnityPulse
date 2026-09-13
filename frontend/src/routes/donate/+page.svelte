@@ -2,7 +2,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { Loader2, Heart, DollarSign, Calendar, Users, HeartHandshake } from "lucide-svelte";
+  import { fetchExchangeRates, detectUserCurrency, formatCurrency, type ExchangeRateData } from '$lib/exchangeRate';
 
+  let exchangeRates = $state<ExchangeRateData | null>(null);
+  let userCurrency = $state<string>('BDT');
   let isLoading = $state(true);
   let projects = $state<any[]>([]);
   let error = $state("");
@@ -46,8 +49,14 @@
     }
   }
 
-  onMount(() => {
+  onMount(async () => {
     fetchProjects();
+    
+    // Detect user's currency and fetch rates (if not BDT)
+    userCurrency = detectUserCurrency();
+    if (userCurrency !== 'BDT') {
+      exchangeRates = await fetchExchangeRates();
+    }
   });
 </script>
 
@@ -100,12 +109,19 @@
                 style={`width: ${progressPercent(project.collectedAmount, project.goalAmount)}%`}
               ></div>
             </div>
-            <div class="progress-info">
-              <span class="collected mono"
-                >{formatAmount(project.collectedAmount)}</span
-              >
-              <span class="goal mono">{formatAmount(project.goalAmount)}</span>
-            </div>
+          <div class="progress-info">
+            <span class="collected mono"
+              >{formatAmount(project.collectedAmount)}</span
+            >
+            <span class="goal mono">{formatAmount(project.goalAmount)}</span>
+          </div>
+
+          {#if exchangeRates && userCurrency !== 'BDT' && exchangeRates.rates[userCurrency]}
+            <p class="approx-note">
+              লক্ষ্য ≈ {formatCurrency(project.goalAmount * exchangeRates.rates[userCurrency], userCurrency)} {userCurrency}
+              <span class="approx-disclaimer">(আনুমানিক, লাইভ রেট অনুযায়ী — চূড়ান্ত amount আপনার ব্যাংক/কার্ডের নিজস্ব rate অনুযায়ী সামান্য ভিন্ন হতে পারে)</span>
+            </p>
+          {/if}
           </div>
 
           <div class="project-tags">
@@ -171,20 +187,6 @@
     margin-top: 6px;
     font-family: 'Hind Siliguri', sans-serif;
   }
-  /* .hero-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 12px;
-    padding: 8px 16px;
-    background: #E9A23B;
-    color: #4A2E08;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    text-decoration: none;
-    font-family: 'Hind Siliguri', sans-serif;
-  } */
   .donate-page .page-hero { background: linear-gradient(135deg, #B8503F, #153F36); }
   .donate-page {
     min-height: 100vh;
@@ -210,27 +212,6 @@
       padding: 1rem;
     }
   }
-  /* .donate-header {
-    text-align: center;
-    padding: 6px 0 4px;
-  }
-  .header-icon {
-    color: #b8503f;
-    margin-bottom: 0.25rem;
-  }
-  .donate-title {
-    font-family: "Baloo Da 2", sans-serif;
-    font-size: 26px;
-    font-weight: 800;
-    color: #153f36;
-  }
-  .donate-sub {
-    font-size: 13px;
-    color: #5b675f;
-    margin-top: 4px;
-  } */
-
-  /* .spin-anim { animation: spin 1s linear infinite; color: #1F5D50; } */
   @keyframes spin {
     from {
       transform: rotate(0deg);
@@ -385,5 +366,23 @@
     font-size: 13.5px;
     color: #5b675f;
     margin-top: 6px;
+  }
+
+  .approx-note {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #1F5D50;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .approx-disclaimer {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: #5B675F;
+    margin-top: 3px;
+    line-height: 1.5;
+    font-family: 'Hind Siliguri', sans-serif;
   }
 </style>

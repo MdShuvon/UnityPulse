@@ -1,3 +1,4 @@
+//frontend/src/lib/exchangeRate.ts
 export interface ExchangeRateData {
   base:      string;
   rates:     Record<string, number>;
