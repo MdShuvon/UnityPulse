@@ -1,3 +1,4 @@
+//core-api/src/lib/redis.ts
 import Redis from 'ioredis';
 import EventEmitter from 'events';
 

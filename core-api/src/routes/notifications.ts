@@ -1,3 +1,4 @@
+//core-api/src/routes/notifications.ts
 import { FastifyInstance }       from 'fastify';
 import { notificationService }  from '../services/notificationService';
 import { notificationEmitter }  from '../lib/redis';
@@ -7,8 +8,16 @@ export async function notificationRoutes(app: FastifyInstance) {
 
   app.get('/notifications', { preHandler: requireAuth }, async (req, reply) => {
     const userId = (req.session as any).userId;
-    const { limit = '20', page = '1' } = req.query as any;
-    return reply.send(await notificationService.getNotifications(userId, Math.max(1, +limit), Math.max(1, +page)));
+    const { limit = '20', page = '1', filter = 'all' } = req.query as any;
+    const safeFilter = filter === 'unread' ? 'unread' : 'all';
+    return reply.send(
+      await notificationService.getNotifications(
+        userId,
+        Math.max(1, +limit),
+        Math.max(1, +page),
+        safeFilter,
+      )
+    );
   });
 
   app.get('/notifications/count', { preHandler: requireAuth }, async (req, reply) => {

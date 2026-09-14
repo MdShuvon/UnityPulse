@@ -275,7 +275,7 @@ export class DonationService {
       project.org.adminId,
       'DONATION_RECEIVED',
       `${data.guestName || 'একজন member'} ৳${data.amount} donate করেছেন — ${project.title}`,
-      donation.id
+      projectId  // ✅ donation.id → projectId
     );
 
     const liveData = {

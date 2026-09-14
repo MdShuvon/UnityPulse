@@ -1,3 +1,4 @@
+// core-api/src/middleware/authGuard.ts
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma';
 import { redis } from '../lib/redis';

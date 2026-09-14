@@ -1,23 +1,34 @@
+//core-api/src/services/notificationService.ts
+
 import { prisma } from '../lib/prisma';
 import { redis }  from '../lib/redis';
 
 export class NotificationService {
 
-  // Single send — Bug 1 fix: redis.publish() for SSE routing
+  // Single send — SSE-তে full notification + unread count publish
   async send(userId: string, type: string, message: string, refId?: string) {
     const notification = await prisma.notification.create({
       data: { userId, type, message, refId },
     });
 
-    // Per-user channel publish — notificationEmitter এ route হবে
+    // Per-user channel publish — full notification + count
     const count = await this.getUnreadCount(userId);
-    await redis.publish(`notify:${userId}`, JSON.stringify({ unreadCount: count }))
-      .catch(() => {}); // SSE না থাকলে skip
+    await redis.publish(`notify:${userId}`, JSON.stringify({
+      unreadCount: count,
+      notification: {
+        id:        notification.id,
+        type:      notification.type,
+        message:   notification.message,
+        refId:     notification.refId,
+        isRead:    notification.isRead,
+        createdAt: notification.createdAt,
+      },
+    })).catch(() => {});
 
     return notification;
   }
 
-  // Bulk send — Bug 9 fix: createMany() = 1 DB query instead of N
+  // Bulk send — createMany() = 1 DB query, then per-user publish
   async sendBulk(userIds: string[], type: string, message: string, refId?: string) {
     if (userIds.length === 0) return;
 
@@ -25,24 +36,60 @@ export class NotificationService {
       data: userIds.map(userId => ({ userId, type, message, refId })),
     });
 
-    // Non-blocking Redis publish per user
-    userIds.forEach(userId => {
-      redis.publish(`notify:${userId}`, JSON.stringify({ newNotification: true }))
-        .catch(() => {});
+    // Fetch created notifications for full payload
+    const created = await prisma.notification.findMany({
+      where: {
+        userId: { in: userIds },
+        type,
+        message,
+        refId: refId || null,
+      },
+      orderBy: { createdAt: 'desc' },
+      take:    userIds.length,
     });
+
+    // Per-user publish with actual notification object
+    for (const userId of userIds) {
+      const userNotif = created.find(n => n.userId === userId);
+      if (!userNotif) continue;
+
+      const count = await this.getUnreadCount(userId);
+      redis.publish(`notify:${userId}`, JSON.stringify({
+        unreadCount:  count,
+        notification: {
+          id:        userNotif.id,
+          type:      userNotif.type,
+          message:   userNotif.message,
+          refId:     userNotif.refId,
+          isRead:    userNotif.isRead,
+          createdAt: userNotif.createdAt,
+        },
+      })).catch(() => {});
+    }
   }
 
-  // Paginated — not getUnread() with all rows
-  async getNotifications(userId: string, limit = 20, page = 1) {
+  // Paginated with filter support (all | unread)
+  async getNotifications(
+    userId: string,
+    limit = 20,
+    page = 1,
+    filter: 'all' | 'unread' = 'all',
+  ) {
     const offset = (page - 1) * limit;
+
+    const where: any = { userId };
+    if (filter === 'unread') {
+      where.isRead = false;
+    }
+
     const [items, total] = await Promise.all([
       prisma.notification.findMany({
-        where:   { userId },
+        where,
         orderBy: { createdAt: 'desc' },
         skip:    offset,
         take:    limit,
       }),
-      prisma.notification.count({ where: { userId } }),
+      prisma.notification.count({ where }),
     ]);
 
     return {

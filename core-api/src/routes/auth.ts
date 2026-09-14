@@ -1,3 +1,5 @@
+//core-api/src/routes/auth.ts
+
 import { FastifyInstance, FastifyRequest } from 'fastify';
 import { userService } from '../services/userService';
 
