@@ -1,13 +1,34 @@
+<!--- frontend/src/routes/+layout.svelte --->
 <script lang="ts">
   import AppHeader from '$lib/components/AppHeader.svelte';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
+  import { setUserContext } from '$lib/stores/user.svelte';
 
   let { children } = $props();
 
   let user = $state<any>(null);
   let showAdminButton = $derived($page.url.pathname.startsWith('/profile'));
   let isAuthChecked = $state(false);
+
+  // Pages যেখানে user info লাগে না (login/register/etc.)
+  const PUBLIC_AUTH_PAGES = [
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/verify-otp',
+    '/reset-password',
+    '/verify-reset-otp',
+  ];
+
+  // ✅ Context-এ user store set করো — সব component access করতে পারবে
+  const userContext = $state({ value: null });
+  setUserContext(userContext);
+
+  // user বদলালে context-ও sync হবে
+  $effect(() => {
+    userContext.value = user;
+  });
 
   async function checkAuth() {
     try {
@@ -29,9 +50,34 @@
   onMount(() => {
     checkAuth();
   });
+
+  // Navigation-এ auth re-check (login/register/logout এর পর)
+  let previousPath = $state('');
+  $effect(() => {
+    const currentPath = $page.url.pathname;
+
+    // Path সত্যিই বদলেছে কিনা check
+    if (currentPath === previousPath) return;
+
+    const wasAuthPage = PUBLIC_AUTH_PAGES.includes(previousPath);
+    const isAuthPage = PUBLIC_AUTH_PAGES.includes(currentPath);
+
+    // Auth page থেকে বের হলে (login → home) → user info refresh
+    // Auth page এ ঢুকলে (logout → login) → user clear + re-check
+    if (wasAuthPage !== isAuthPage) {
+      checkAuth();
+    }
+
+    // Auth page এ ঢুকলে user clear (login page এ header user দেখানো উচিত না)
+    if (isAuthPage && !wasAuthPage) {
+      user = null;
+    }
+
+    previousPath = currentPath;
+  });
 </script>
 
-{#if !['/login', '/register', '/forgot-password', '/verify-otp', '/reset-password', '/verify-reset-otp'].includes($page.url.pathname)}
+{#if !PUBLIC_AUTH_PAGES.includes($page.url.pathname)}
   {#if isAuthChecked}
     <AppHeader {user} currentPath={$page.url.pathname} showAdminButton={showAdminButton} />
   {:else}

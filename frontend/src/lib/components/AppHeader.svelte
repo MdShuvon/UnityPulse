@@ -1,3 +1,4 @@
+<!--- frontend/src/lib/components/AppHeader.svelte --->
 <script lang="ts">
   import {
     Leaf,
@@ -13,8 +14,10 @@
     X,
     LogOut,
     Search,
+    Bell,
   } from "lucide-svelte";
   import { clickOutside } from "$lib/actions/clickOutside";
+  import { getUserContext } from "$lib/stores/user.svelte";
 
   let searchOpen = $state(false);
   let searchQuery = $state("");
@@ -74,6 +77,105 @@
   let showDesktopProfileMenu = $state(false);
   let showMobileProfileMenu = $state(false);
   let isMobile = $state(false);
+  
+  // Notification state — badge count only
+  const userContext = getUserContext();
+  let unreadCount = $state(0);
+  let eventSource: EventSource | null = null;
+  let reconnectDelay = 1000;
+  const MAX_RECONNECT_DELAY = 30000;
+
+  async function fetchUnreadCount() {
+    if (!userContext.value) {
+      unreadCount = 0;
+      return;
+    }
+    try {
+      const res = await fetch('http://localhost:3001/notifications/count', {
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        unreadCount = data.unreadCount || 0;
+      }
+    } catch (err) {
+      console.error('Failed to fetch unread count:', err);
+    }
+  }
+
+  function connectSSE() {
+    if (!userContext.value) return;
+    if (eventSource) return; // already connected
+
+    try {
+      eventSource = new EventSource(
+        'http://localhost:3001/notifications/live',
+        { withCredentials: true }
+      );
+
+      eventSource.onopen = () => {
+        // Reset backoff on successful connection
+        reconnectDelay = 1000;
+      };
+
+      eventSource.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (typeof data.unreadCount === 'number') {
+            unreadCount = data.unreadCount;
+          }
+        } catch (err) {
+          console.error('SSE parse error:', err);
+        }
+      };
+
+      eventSource.onerror = () => {
+        eventSource?.close();
+        eventSource = null;
+
+        // Auto-reconnect with exponential backoff
+        setTimeout(() => {
+          if (userContext.value) connectSSE();
+        }, reconnectDelay);
+
+        reconnectDelay = Math.min(reconnectDelay * 2, MAX_RECONNECT_DELAY);
+      };
+    } catch (err) {
+      console.error('SSE connection failed:', err);
+    }
+  }
+
+  function disconnectSSE() {
+    if (eventSource) {
+      eventSource.close();
+      eventSource = null;
+    }
+  }
+
+  // user ready হলে — count fetch + SSE connect
+  $effect(() => {
+    if (userContext.value) {
+      fetchUnreadCount();
+      connectSSE();
+    } else {
+      unreadCount = 0;
+      disconnectSSE();
+    }
+  });
+
+  // Component unmount হলে SSE disconnect
+  $effect(() => {
+    return () => {
+      disconnectSSE();
+    };
+  });
+
+  // Path বদলালে badge refresh (fallback — SSE fail হলে কাজে আসবে)
+  $effect(() => {
+    if (userContext.value) {
+      fetchUnreadCount();
+    }
+  });
 
   $effect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
@@ -283,6 +385,20 @@
     {/if}
 
     {#if user}
+      <!-- Notification Bell — direct link to notifications page -->
+      <a
+        href="/notifications"
+        class="notification-trigger"
+        aria-label="Notifications"
+      >
+        <Bell size={20} />
+        {#if unreadCount > 0}
+          <span class="notification-badge">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        {/if}
+      </a>
+
       <div class="profile-menu">
         <button
           class="profile-trigger"
@@ -366,6 +482,22 @@
     >
       <Search size={18} />
     </button>
+    
+    {#if user}
+      <a
+        href="/notifications"
+        class="notification-trigger"
+        aria-label="Notifications"
+      >
+        <Bell size={20} />
+        {#if unreadCount > 0}
+          <span class="notification-badge">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        {/if}
+      </a>
+    {/if}
+    
     <button
       onclick={() => (showMoreMenu = !showMoreMenu)}
       class="menu-btn"
@@ -825,6 +957,64 @@
     object-fit: cover;
     display: block;
   }
+
+  /* ─── Notification Bell ─── */
+  /* .notification-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+   */
+  .notification-trigger {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #e4ede9;
+    color: #5b675f;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    text-decoration: none;   /* ← ADD (for <a> tag) */
+  }
+
+  .notification-trigger:hover {
+    background: #1f5d50;
+    color: white;
+    transform: scale(1.05);
+  }
+
+  .notification-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #b8503f;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: "DM Sans", sans-serif;
+    padding: 2px 5px;
+    border-radius: 10px;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 2px solid white;
+    animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes badgePop {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+  }
+
+  /* ─── Notification Dropdown ─── */
 
   .btn-login {
     font-family: "Hind Siliguri", sans-serif;
