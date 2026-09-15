@@ -29,11 +29,14 @@ export async function notificationRoutes(app: FastifyInstance) {
   app.get('/notifications/live', { preHandler: requireAuth }, async (req, reply) => {
     const userId = (req.session as any).userId;
 
+    // ⚠️ CORS headers must be set BEFORE writeHead
+    const origin = req.headers.origin || 'http://localhost:5173';
     reply.raw.writeHead(200, {
       'Content-Type':  'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection':    'keep-alive',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': origin,           // ← Specific origin
+      'Access-Control-Allow-Credentials': 'true',      // ← Required for cookies
     });
 
     // Initial count
@@ -61,3 +64,5 @@ export async function notificationRoutes(app: FastifyInstance) {
     return reply.send(await notificationService.markAllRead((req.session as any).userId));
   });
 }
+
+ 
