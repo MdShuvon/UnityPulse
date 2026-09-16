@@ -274,8 +274,9 @@ export class DonationService {
     await notificationService.send(
       project.org.adminId,
       'DONATION_RECEIVED',
-      `${data.guestName || 'একজন member'} ৳${data.amount} donate করেছেন — ${project.title}`,
-      projectId  // ✅ donation.id → projectId
+      `${data.guestName || 'একজন member'} ৳${data.amount} donate করেছেন`,
+      projectId,
+      project.title  // ← ADD
     );
 
     const liveData = {
@@ -406,8 +407,9 @@ export class DonationService {
     await notificationService.send(
       project.createdBy,
       'PROJECT_ISSUE_REPORTED',
-      `[${typeText}] "${project.title}" project-এ সমস্যা — ${problemDetails}\n\n(Reported by SUPER_ADMIN ${requester.name})`,
-      projectId
+      `[${typeText}] সমস্যা — ${problemDetails}\n\n(Reported by SUPER_ADMIN ${requester.name})`,
+      projectId,
+      project.title  // ← ADD
     );
 
     return { 

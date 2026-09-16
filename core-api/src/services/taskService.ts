@@ -329,13 +329,15 @@ export class TaskService {
       if (taskOrg) {
         await notificationService.send(
           taskOrg.adminId, 'TASK_SUBMITTED',
-          `নতুন submission: ${task.title}`, submission.id
+          `নতুন submission: ${task.title}`, 
+          submission.id,
+          task.title 
         );
       }
     } else {
       await notificationService.send(
         task.createdBy, 'TASK_SUBMITTED',
-        `নতুন submission: ${task.title}`, submission.id
+        `নতুন submission: ${task.title}`, submission.id, task.title
       );
     }
 
@@ -400,13 +402,13 @@ export class TaskService {
       await notificationService.send(
         submission.userId, 'TASK_APPROVED',
         `${submission.task.pointValue} points পেয়েছেন — ${submission.task.title}`,
-        submissionId
+        submissionId,submission.task.title 
       );
     } else {
       await notificationService.send(
         submission.userId, 'TASK_REJECTED',
         `Rejected — ${submission.task.title}. ${note || 'আবার try করো'}`,
-        submissionId
+        submissionId, submission.task.title 
       );
     }
 

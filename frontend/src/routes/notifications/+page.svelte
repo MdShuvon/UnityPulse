@@ -100,30 +100,38 @@
 
   function handleNotificationClick(notif: any) {
     markAsRead(notif);
+
     const target = getNotificationTarget(notif.type, notif.refId);
+
     if (target) {
-      goto(target);
+      const separator = target.includes('?') ? '&' : '?';
+      const query = new URLSearchParams({
+        notifId: notif.id,
+        notifType: notif.type,
+        notifMsg: notif.message,
+      });
+      
+      if (notif.refTitle) {
+        query.set('notifTitle', notif.refTitle);
+      }
+      
+      goto(`${target}${separator}${query.toString()}`);
     }
   }
 
   function getNotificationTarget(type: string, refId: string | null): string | null {
-    if (!refId && type !== 'TASK_SUBMITTED' && type !== 'TASK_APPROVED'
-        && type !== 'TASK_REJECTED' && type !== 'CAUSE_JOIN_APPROVED'
-        && type !== 'CAUSE_JOIN_REJECTED' && type !== 'JOB_APPLICATION_STATUS') {
-      return null;
-    }
-    const map: Record<string, (id: string) => string> = {
-      DONATION_RECEIVED:      (id) => `/admin/donations/${id}`,
-      TASK_SUBMITTED:         ()   => `/admin/tasks`,
-      TASK_APPROVED:          ()   => `/tasks/mine`,
-      TASK_REJECTED:          ()   => `/tasks/mine`,
-      TASK_ASSIGNED:          (id) => `/tasks/${id}`,
-      CAUSE_JOIN_APPROVED:    ()   => `/admin/causes`,
-      CAUSE_JOIN_REJECTED:    ()   => `/admin/causes`,
-      PROJECT_ISSUE_REPORTED: (id) => `/admin/donations/${id}`,
-      JOB_APPLICATION_STATUS: ()   => `/career/mine`,
+    const map: Record<string, string> = {
+      DONATION_RECEIVED:      '/admin/donations',
+      TASK_SUBMITTED:         '/admin/tasks',
+      TASK_APPROVED:          '/tasks/mine',
+      TASK_REJECTED:          '/tasks/mine',
+      TASK_ASSIGNED:          refId ? `/tasks/${refId}` : '/tasks',
+      CAUSE_JOIN_APPROVED:    '/admin/causes',
+      CAUSE_JOIN_REJECTED:    '/admin/causes',
+      PROJECT_ISSUE_REPORTED: '/admin/donations',
+      JOB_APPLICATION_STATUS: '/career/mine',
     };
-    return map[type]?.(refId || '') || null;
+    return map[type] || null;
   }
 
   function switchFilter(filter: 'all' | 'unread') {
@@ -315,6 +323,12 @@
             </div>
             <div class="notif-content">
               <p class="notif-message bangla">{notif.message}</p>
+              {#if notif.refTitle}
+                <div class="notif-context">
+                  <Target size={12} />
+                  <span class="bangla">{notif.refTitle}</span>
+                </div>
+              {/if}
               <span class="notif-time">{timeAgo(notif.createdAt)}</span>
             </div>
             {#if !notif.isRead}
@@ -365,6 +379,22 @@
 </div>
 
 <style>
+  .notif-context {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+    padding: 3px 8px;
+    background: #F6F4EE;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #1F5D50;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .notifications-page {
     min-height: 100vh;
     font-family: 'DM Sans', sans-serif;

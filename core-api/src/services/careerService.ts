@@ -341,10 +341,16 @@ export class CareerService {
 
     // Fix 6: Candidate কে notification দাও
     const msg = action === 'ACCEPTED'
-      ? `🎉 আপনার application accepted হয়েছে — ${app.job.title}. ${note || ''}`
-      : `আপনার application rejected হয়েছে — ${app.job.title}. ${note || ''}`;
+      ? `🎉 আপনার application accepted হয়েছে। ${note || ''}`
+      : `আপনার application rejected হয়েছে। ${note || ''}`;
 
-    await notificationService.send(app.userId, 'JOB_APPLICATION_STATUS', msg, applicationId);
+    await notificationService.send(
+      app.userId, 
+      'JOB_APPLICATION_STATUS', 
+      msg, 
+      applicationId,
+      app.job.title  // ← ADD
+    );
 
     await auditService.log('ADMIN_ACTION', 'JobApplication', applicationId, adminId, { action, note });
 

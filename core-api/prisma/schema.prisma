@@ -387,6 +387,7 @@ model Notification {
   type      String // String রাখো — enum করলে migration break হবে
   message   String
   refId     String?
+  refTitle  String?  
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 

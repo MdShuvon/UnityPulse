@@ -1,6 +1,7 @@
 <!--- frontend/src/routes/+layout.svelte --->
 <script lang="ts">
   import AppHeader from '$lib/components/AppHeader.svelte';
+  import NotificationToast from '$lib/components/NotificationToast.svelte';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { setUserContext } from '$lib/stores/user.svelte';
@@ -84,6 +85,9 @@
     <div class="header-placeholder"></div>
   {/if}
 {/if}
+
+<!-- ✅ Notification Toast — any page-এ show হবে -->
+<NotificationToast />
 
 {@render children()}
 
