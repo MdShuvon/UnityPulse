@@ -30,15 +30,13 @@ export class LocalAdminService {
     if (!area) throw new Error('Area পাওয়া যায়নি');
 
     // Bug 7 fix: Buffer already received from route — no stream issue
-    const bankPath = await fileService.uploadBuffer(
-      bankProof.buffer, bankProof.mimetype, bankProof.filename, 'documents'
-    );
-    const bankUrl  = fileService.getUrl(bankPath);
+    const bankPath = await fileService.uploadBuffer(bankProof.buffer, bankProof.mimetype, 'bank');
+    const bankUrl  = await fileService.getUrl(bankPath);
 
     let emergencyUrl: string | undefined;
     if (data.isEmergency && emergencyProof) {
-      const ep     = await fileService.uploadBuffer(emergencyProof.buffer, emergencyProof.mimetype, emergencyProof.filename, 'documents');
-      emergencyUrl = fileService.getUrl(ep);
+      const ep     = await fileService.uploadBuffer(emergencyProof.buffer, emergencyProof.mimetype, 'documents');
+      emergencyUrl = await fileService.getUrl(ep);
     }
 
     const application = await prisma.localAdminApplication.create({

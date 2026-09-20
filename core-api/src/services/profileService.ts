@@ -36,18 +36,17 @@ export class ProfileService {
   }
 
   // Profile photo upload
-  async uploadPhoto(userId: string, file: MultipartFile) {
-    // Use 'documents' folder for profile photos (no compression)
-    const path = await fileService.upload(file, 'documents');
-    const url  = fileService.getUrl(path);
+async uploadPhoto(userId: string, file: MultipartFile) {
+  const path = await fileService.upload(file, 'avatar');   // ← 'documents' নয়, 'avatar'
+  const url  = await fileService.getUrl(path);
 
-    await prisma.user.update({
-      where: { id: userId },
-      data:  { profilePhoto: url },
-    });
+  await prisma.user.update({
+    where: { id: userId },
+    data:  { profilePhoto: url },
+  });
 
-    return { profilePhoto: url };
-  }
+  return { profilePhoto: url };
+}
 
   // Privacy toggle — field level control
   async togglePrivacy(
