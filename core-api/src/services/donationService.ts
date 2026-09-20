@@ -3,6 +3,7 @@ import { redis, donationEmitter } from '../lib/redis';
 import { pointService }      from './pointService';
 import { auditService }      from './auditService';
 import { notificationService } from './notificationService';
+import { ProjectStatus } from '../constants/status';
 
 export class DonationService {
 
@@ -57,21 +58,21 @@ export class DonationService {
   async updateProject(adminId: string, projectId: string, data: {
     title?:       string;
     description?: string;
-    status?:      string;
+    status?:      ProjectStatus;
     deadline?:    string;
   }) {
     const project = await prisma.donationProject.findFirst({
       where: { id: projectId, createdBy: adminId },
     });
     if (!project) throw new Error('Project পাওয়া যায়নি বা permission নেই');
-
+    
     return prisma.donationProject.update({
-      where: { id: projectId },
-      data: {
-        ...data,
-        deadline: data.deadline ? new Date(data.deadline) : undefined,
-      },
-    });
+       where: { id: projectId },
+       data: {
+         ...data,
+         deadline: data.deadline ? new Date(data.deadline) : undefined,
+       },
+     });
   }
 
   async addExpense(adminId: string, projectId: string, data: {
@@ -99,7 +100,7 @@ export class DonationService {
   // ── PUBLIC PROJECT LIST ───────────────────────────────
   async getAllProjects() {
     return prisma.donationProject.findMany({
-      where:   { status: 'active' },
+      where: { status: 'ACTIVE' },
       include: {
         org: { select: { id: true, name: true } },
         _count: { select: { donations: true } },
@@ -206,7 +207,7 @@ export class DonationService {
       include: { org: true },
     });
     if (!project) throw new Error('Project পাওয়া যায়নি');
-    if (project.status !== 'active') throw new Error('এই project এ donation বন্ধ');
+    if (project.status !== 'ACTIVE') throw new Error('এই project এ donation বন্ধ');
 
     // ✅ প্রশ্ন ১৭ — Deadline check
     if (project.deadline && new Date() > new Date(project.deadline)) {
@@ -227,6 +228,7 @@ export class DonationService {
             guestName:  data.guestName || null,
             guestPhone: data.guestPhone || null,
             guestEmail: data.guestEmail || null,
+            status:     'VERIFIED',
           },
         });
 

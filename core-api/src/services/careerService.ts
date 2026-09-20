@@ -1,7 +1,7 @@
 import { prisma }               from '../lib/prisma';
 import { minioClient, BUCKET }  from '../lib/minio';
 import { fileService }          from './fileService';
-import { paymentService }       from './paymentService';
+import { ApplicationStatus } from '../constants/status';
 import { notificationService }  from './notificationService';
 import { auditService }         from './auditService';
 
@@ -72,75 +72,55 @@ export class CareerService {
   // Fix 4: Self-apply block
   // Fix 7: Deadline check
   async applyForJob(
-    userId:     string,
-    jobId:      string,
-    cvFile:     { buffer: Buffer; mimetype: string; filename: string },
-    paymentRef?: string
+    userId: string,
+    jobId:  string,
+    cvFile: { buffer: Buffer; mimetype: string; filename: string },
   ) {
     const job = await prisma.jobPost.findUnique({ where: { id: jobId } });
     if (!job || job.status !== 'OPEN') throw new Error('Job পাওয়া যায়নি বা বন্ধ');
 
-    // Fix 7: Deadline check
     if (job.deadline && new Date() > job.deadline) {
       throw new Error('এই job এর application deadline পার হয়ে গেছে');
     }
-
-    // Fix 4: Self-apply block
     if (job.createdBy === userId) {
       throw new Error('নিজের post করা job এ apply করা যাবে না');
     }
 
-    // Fix 1: Duplicate check
-    const existing = await prisma.jobApplication.findFirst({
-      where: { userId, jobId },
-    });
-    if (existing) throw new Error('এই job এ আপনি ইতিমধ্যে apply করেছেন');
+    const needsPayment = job.applicationFee > 0;
 
-    // Fix 2: Payment check - MOCK mode-এ skip
-    if (job.applicationFee > 0) {
-      const MODE = process.env.PAYMENT_MODE || 'mock';
-      
-      if (MODE === 'mock') {
-        // Development: skip payment, mark as paid
-        paymentRef = `MOCK-${Date.now()}`;
-      } else {
-        if (!paymentRef) throw new Error(`এই job এ apply করতে ৳${job.applicationFee} fee দিতে হবে`);
-        const result = await paymentService.verify(paymentRef, job.applicationFee);
-        if (!result.verified) throw new Error(result.message || 'Payment verify হয়নি');
+    const existing = await prisma.jobApplication.findFirst({ where: { userId, jobId } });
+    if (existing) {
+      // পেমেন্ট অসমাপ্ত থাকলে নতুন আবেদন না বানিয়ে সেটাতেই ফিরিয়ে দাও
+      if (existing.status === ApplicationStatus.PENDING_PAYMENT) {
+        return { message: 'পেমেন্ট সম্পন্ন করুন', id: existing.id, requiresPayment: true };
       }
+      throw new Error('এই job এ আপনি ইতিমধ্যে apply করেছেন');
     }
 
-    // CV type check — PDF only (professional standard)
     if (cvFile.mimetype !== 'application/pdf') {
       throw new Error('CV অবশ্যই PDF format এ হতে হবে');
     }
 
-    // Fix 5: Store MinIO path, not public URL
     let cvPath: string;
-    let applicationId: string | null = null;
-
     try {
-      cvPath = await fileService.uploadBuffer(cvFile.buffer, cvFile.mimetype, cvFile.filename, 'cv');
-    } catch (err) {
-      // Fix 3: Upload failed — mark payment as refund_pending if fee was paid
+      cvPath = await fileService.uploadBuffer(cvFile.buffer, cvFile.mimetype, 'cv');
+    } catch {
       throw new Error('CV upload failed। আবার চেষ্টা করুন।');
     }
 
     const application = await prisma.jobApplication.create({
       data: {
-        jobId, userId,
-        cvPath,
-        paymentRef:  paymentRef || null,
-        feeStatus:   job.applicationFee > 0 ? 'VERIFIED' : 'FREE',
-        status:      'SUBMITTED',
+        jobId, userId, cvPath,
+        feeStatus: 'FREE', // পেমেন্ট verify হলে settle() এটাকে VERIFIED করে
+        status: needsPayment ? ApplicationStatus.PENDING_PAYMENT : ApplicationStatus.SUBMITTED,
       },
     });
-    applicationId = application.id;
 
-    await auditService.log('PAYMENT_VERIFIED', 'JobApplication', application.id, userId,
-      { fee: job.applicationFee, paymentRef });
-
-    return { message: 'Application submit হয়েছে!', id: application.id };
+    return {
+      message: needsPayment ? 'পেমেন্ট সম্পন্ন করলে আবেদন জমা হবে' : 'Application submit হয়েছে!',
+      id: application.id,
+      requiresPayment: needsPayment,
+    };
   }
 
   // ── MY APPLICATIONS ───────────────────────────────────────────────────
@@ -285,7 +265,7 @@ export class CareerService {
 
     return prisma.jobPost.update({
       where: { id: jobId },
-      data:  { ...data, deadline: data.deadline ? new Date(data.deadline) : undefined },
+      data:  { ...data, status: data.status as 'OPEN' | 'CLOSED' | undefined, deadline: data.deadline ? new Date(data.deadline) : undefined },
     });
   }
 
@@ -310,7 +290,7 @@ export class CareerService {
     }
 
     return prisma.jobApplication.findMany({
-      where:   { jobId },
+      where: { status: { not: ApplicationStatus.PENDING_PAYMENT } },
       select: {
         id: true, status: true, feeStatus: true, reviewNote: true, createdAt: true,
         user: { select: { id: true, name: true, email: true, phone: true } },

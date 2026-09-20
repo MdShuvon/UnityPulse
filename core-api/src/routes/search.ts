@@ -25,7 +25,7 @@ export async function searchRoutes(app: FastifyInstance) {
     // Search Donation Projects (active)
     const projects = await prisma.donationProject.findMany({
       where: {
-        status: 'active',
+        status: 'ACTIVE',
         title: { contains: query, mode: 'insensitive' },
       },
       take: 3,

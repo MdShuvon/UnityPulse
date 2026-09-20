@@ -13,7 +13,7 @@ export class CauseService {
       take: 5, // Home page-এ ৫টা Cause দেখান
       include: {
         projects: {
-          where: { status: 'active' },
+          where: { status: 'ACTIVE' },
           include: {
             org: { select: { id: true, name: true } },
           },
@@ -30,7 +30,7 @@ export class CauseService {
       where: { id: causeId, status: 'ACTIVE' },
       include: {
         projects: {
-          where: { status: 'active' },
+          where: { status: 'ACTIVE' },
           include: {
             org: { select: { id: true, name: true } },
             expenses: true,

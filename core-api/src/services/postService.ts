@@ -1,12 +1,12 @@
 // core-api/src/services/postService.ts
-import { prisma }               from '../lib/prisma';
+import { prisma }              from '../lib/prisma';
 import { redis }               from '../lib/redis';
 import { fileService }         from './fileService';
 import { notificationService } from './notificationService';
 import { auditService }        from './auditService';
 import sanitizeHtml            from 'sanitize-html';
 import escapeHtml              from 'escape-html';
-
+import { ReviewStatus }        from '../constants/status';
 // Fix 5: SET-based press cache tracking
 const PRESS_CACHE_SET = 'press:cache-keys';
 const PRESS_CACHE_TTL = 60; // 1 minute
@@ -52,8 +52,8 @@ export class PostService {
 
     const photoPaths: string[] = [];
     for (const f of bufferedFiles) {
-      const path = await fileService.uploadBuffer(f.buffer, f.mimetype, f.filename, 'post');
-      photoPaths.push(fileService.getUrl(path));
+      const path = await fileService.uploadBuffer(f.buffer, f.mimetype, 'post');   // ✅ ৩ arg
+      photoPaths.push(await fileService.getUrl(path));   // ✅ await আছে
     }
 
     const post = await prisma.post.create({
@@ -200,17 +200,15 @@ export class PostService {
     const post = await prisma.post.findFirst({ where: { id: postId, isDeleted: false, isHidden: false } });
     if (!post) throw new Error('Post পাওয়া যায়নি');
 
-    try {
-      await prisma.like.delete({ where: { userId_postId: { userId, postId } } });
-      return { liked: false };
-    } catch {
-      await prisma.like.create({ data: { userId, postId } });
-      if (post.userId !== userId) {
-        const liker = await prisma.user.findUnique({ where: { id: userId }, select: { name: true } });
-        await notificationService.send(post.userId, 'GENERAL', `${liker?.name} আপনার post like করেছে`, postId);
-      }
-      return { liked: true };
+    const { count } = await prisma.like.deleteMany({ where: { userId, postId } });
+    if (count > 0) return { liked: false };
+
+    await prisma.like.create({ data: { userId, postId } });
+    if (post.userId !== userId) {
+      const liker = await prisma.user.findUnique({ where: { id: userId }, select: { name: true } });
+      await notificationService.send(post.userId, 'GENERAL', `${liker?.name} আপনার post like করেছে`, postId);
     }
+    return { liked: true };
   }
 
   // ── CREATE COMMENT ────────────────────────────────────────────────────
@@ -333,13 +331,11 @@ export class PostService {
     const comment = await prisma.comment.findFirst({ where: { id: commentId, isDeleted: false } });
     if (!comment) throw new Error('Comment পাওয়া যায়নি');
 
-    try {
-      await prisma.like.delete({ where: { userId_commentId: { userId, commentId } } });
-      return { liked: false };
-    } catch {
-      await prisma.like.create({ data: { userId, commentId } });
-      return { liked: true };
-    }
+    const { count } = await prisma.like.deleteMany({ where: { userId, commentId } });
+    if (count > 0) return { liked: false };
+
+    await prisma.like.create({ data: { userId, commentId } });
+    return { liked: true };
   }
 
   // ── REPORT ───────────────────────────────────────────────────────────
@@ -377,7 +373,7 @@ export class PostService {
 
     await prisma.report.update({
       where: { id: reportId },
-      data:  { status: action === 'DISMISS' ? 'DISMISSED' : 'REVIEWED', reviewNote: note, reviewedBy: adminId },
+      data: { status: action === 'DISMISS' ? ReviewStatus.DISMISSED : ReviewStatus.REVIEWED, reviewNote: note, reviewedBy: adminId },
     });
 
     if (action !== 'DISMISS') {

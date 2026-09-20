@@ -22,7 +22,7 @@ export class HomeService {
         prisma.donation.count(),              // সব donations (guest + member)
         prisma.organization.count({ where: { isActive: true } }),
         // Bug 2 fix: lowercase 'active' — schema definition অনুযায়ী
-        prisma.donationProject.count({ where: { status: 'active' } }),
+        prisma.donationProject.count({ where: { status: 'ACTIVE' } }),
         prisma.user.count({ where: { isVerified: true, role: 'MEMBER' } }),
       ]);
 

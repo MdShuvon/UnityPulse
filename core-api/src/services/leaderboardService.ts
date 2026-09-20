@@ -1,17 +1,16 @@
-//core-api/src/services/leaderboardService.ts
+// core-api/src/services/leaderboardService.ts
 import { prisma } from '../lib/prisma';
 import { redis }  from '../lib/redis';
+import { PointReason } from '../constants/status';
 
-const CACHE_TTL      = 300; // 5 minutes
+const CACHE_TTL      = 300;
 const CACHE_KEYS_SET = 'lb:cache-keys';
 
-// Helper: cache set + key track করো
 async function cacheSet(key: string, data: any) {
   await redis.set(key, JSON.stringify(data), 'EX', CACHE_TTL);
-  await redis.sadd(CACHE_KEYS_SET, key); // Fix 3: SET এ track করো
+  await redis.sadd(CACHE_KEYS_SET, key);
 }
 
-// Badge — DB তে store হয় না, rank থেকে real-time
 export function getBadge(rank: number): string {
   if (rank === 1)  return 'Legend';
   if (rank <= 3)   return 'Champion';
@@ -21,7 +20,6 @@ export function getBadge(rank: number): string {
   return 'Newcomer';
 }
 
-// Fix 1: Batch user fetch — N+1 solve করে
 async function enrichWithUsers(
   raw: Array<{ userId: string; _sum: { amount: number | null } }>,
   offset: number
@@ -44,10 +42,12 @@ async function enrichWithUsers(
   });
 }
 
-// Fix 5: Efficient count — full rows load না করে
-async function countDistinctUsers(reason: string, orgMemberIds?: string[]) {
+async function countDistinctUsers(reason: PointReason, orgMemberIds?: string[]) {
   return prisma.pointLedger.findMany({
-    where:    { reason, ...(orgMemberIds ? { userId: { in: orgMemberIds } } : {}) },
+    where: {
+      reason,
+      ...(orgMemberIds ? { userId: { in: orgMemberIds } } : {}),
+    },
     select:   { userId: true },
     distinct: ['userId'],
   }).then(r => r.length);
@@ -55,64 +55,54 @@ async function countDistinctUsers(reason: string, orgMemberIds?: string[]) {
 
 export class LeaderboardService {
 
-  // ── GLOBAL DONATION LEADERBOARD ──────────────────────────────────────
   async getDonationLeaderboard(limit = 20, page = 1) {
     const cacheKey = `lb:donation:${limit}:${page}`;
     const cached   = await redis.get(cacheKey);
     if (cached) return JSON.parse(cached);
 
     const offset = (page - 1) * limit;
-
-    // Fix 5: Efficient count
-    const total = await countDistinctUsers('DONATION');
+    const total  = await countDistinctUsers(PointReason.DONATION);
 
     const raw = await prisma.pointLedger.groupBy({
       by:      ['userId'],
-      where:   { reason: 'DONATION' },
+      where:   { reason: PointReason.DONATION },
       _sum:    { amount: true },
       orderBy: { _sum: { amount: 'desc' } },
       skip:    offset,
       take:    limit,
     });
 
-    // Fix 1: Batch fetch
     const data   = await enrichWithUsers(raw as any, offset);
-    const result = {
-      data,
-      pagination: { page, limit, total, hasMore: offset + raw.length < total },
-    };
+    const result = { data, pagination: { page, limit, total, hasMore: offset + raw.length < total } };
 
     await cacheSet(cacheKey, result);
     return result;
   }
 
-  // ── GLOBAL TASK LEADERBOARD ───────────────────────────────────────────
   async getTaskLeaderboard(limit = 20, page = 1) {
     const cacheKey = `lb:task:${limit}:${page}`;
     const cached   = await redis.get(cacheKey);
     if (cached) return JSON.parse(cached);
 
     const offset = (page - 1) * limit;
-    const total  = await countDistinctUsers('TASK');
+    const total  = await countDistinctUsers(PointReason.TASK);
 
     const raw = await prisma.pointLedger.groupBy({
       by:      ['userId'],
-      where:   { reason: 'TASK' },
+      where:   { reason: PointReason.TASK },
       _sum:    { amount: true },
       orderBy: { _sum: { amount: 'desc' } },
       skip:    offset,
       take:    limit,
     });
 
-    // Fix 1: Batch fetch users + task counts
-    const userIds    = raw.map(r => r.userId);
-    const users      = await prisma.user.findMany({
+    const userIds = raw.map(r => r.userId);
+    const users   = await prisma.user.findMany({
       where:  { id: { in: userIds } },
       select: { id: true, name: true, profilePhoto: true },
     });
-    const userMap    = Object.fromEntries(users.map(u => [u.id, u]));
+    const userMap = Object.fromEntries(users.map(u => [u.id, u]));
 
-    // Batch task count
     const taskCounts = await prisma.taskSubmission.groupBy({
       by:    ['userId'],
       where: { userId: { in: userIds }, status: 'APPROVED' },
@@ -136,8 +126,6 @@ export class LeaderboardService {
     return result;
   }
 
-  // ── ORG VS ORG LEADERBOARD ────────────────────────────────────────────
-  // Fix 6: N+1 solve — সব org এর task points একটা query তে
   async getOrgLeaderboard(limit = 20) {
     const cacheKey = `lb:org:${limit}`;
     const cached   = await redis.get(cacheKey);
@@ -152,14 +140,13 @@ export class LeaderboardService {
       },
     });
 
-    // Fix 6: সব member এর task points একটা query তে
     const allMemberIds = [...new Set(
       orgs.flatMap(o => o.memberships.map(m => m.userId))
     )];
     const allTaskPoints = allMemberIds.length > 0
       ? await prisma.pointLedger.groupBy({
           by:    ['userId'],
-          where: { userId: { in: allMemberIds }, reason: 'TASK' },
+          where: { userId: { in: allMemberIds }, reason: PointReason.TASK },
           _sum:  { amount: true },
         })
       : [];
@@ -171,7 +158,7 @@ export class LeaderboardService {
       const totalDonation = org.donationProjects.reduce((s, p) => s + p.collectedAmount, 0);
       const donationScore = totalDonation / 1000;
 
-      const taskPoints    = org.memberships.reduce(
+      const taskPoints = org.memberships.reduce(
         (s, m) => s + (taskPointMap[m.userId] ?? 0), 0
       ) * 10;
 
@@ -195,8 +182,6 @@ export class LeaderboardService {
     return ranked;
   }
 
-  // ── ORG INTERNAL DONATION RANK ───────────────────────────────────────
-  // NEW: ওই org এর শুধু members এর donation rank
   async getOrgDonationLeaderboard(orgId: string, limit = 20, page = 1) {
     const cacheKey = `lb:org-don:${orgId}:${limit}:${page}`;
     const cached   = await redis.get(cacheKey);
@@ -210,11 +195,11 @@ export class LeaderboardService {
     if (memberIds.length === 0) return { data: [], pagination: { page, limit, total: 0, hasMore: false } };
 
     const offset = (page - 1) * limit;
-    const total  = await countDistinctUsers('DONATION', memberIds);
+    const total  = await countDistinctUsers(PointReason.DONATION, memberIds);
 
     const raw = await prisma.pointLedger.groupBy({
       by:      ['userId'],
-      where:   { userId: { in: memberIds }, reason: 'DONATION' },
+      where:   { userId: { in: memberIds }, reason: PointReason.DONATION },
       _sum:    { amount: true },
       orderBy: { _sum: { amount: 'desc' } },
       skip:    offset,
@@ -227,8 +212,6 @@ export class LeaderboardService {
     return result;
   }
 
-  // ── ORG INTERNAL TASK RANK ────────────────────────────────────────────
-  // NEW: ওই org এর শুধু members এর task rank
   async getOrgTaskLeaderboard(orgId: string, limit = 20, page = 1) {
     const cacheKey = `lb:org-task:${orgId}:${limit}:${page}`;
     const cached   = await redis.get(cacheKey);
@@ -242,11 +225,11 @@ export class LeaderboardService {
     if (memberIds.length === 0) return { data: [], pagination: { page, limit, total: 0, hasMore: false } };
 
     const offset = (page - 1) * limit;
-    const total  = await countDistinctUsers('TASK', memberIds);
+    const total  = await countDistinctUsers(PointReason.TASK, memberIds);
 
     const raw = await prisma.pointLedger.groupBy({
       by:      ['userId'],
-      where:   { userId: { in: memberIds }, reason: 'TASK' },
+      where:   { userId: { in: memberIds }, reason: PointReason.TASK },
       _sum:    { amount: true },
       orderBy: { _sum: { amount: 'desc' } },
       skip:    offset,
@@ -259,38 +242,34 @@ export class LeaderboardService {
     return result;
   }
 
-  // ── MY GLOBAL RANK ────────────────────────────────────────────────────
-  // Fix 2: having query — সব user memory তে load করে না
   async getMyRank(userId: string) {
-    // Donation rank
     const myDonPts = await prisma.pointLedger.aggregate({
-      where: { userId, reason: 'DONATION' }, _sum: { amount: true },
+      where: { userId, reason: PointReason.DONATION }, _sum: { amount: true },
     });
     const myDonPoints = myDonPts._sum.amount ?? 0;
 
     const donAhead = await prisma.pointLedger.groupBy({
       by:     ['userId'],
-      where:  { reason: 'DONATION' },
+      where:  { reason: PointReason.DONATION },
       _sum:   { amount: true },
       having: { amount: { _sum: { gt: myDonPoints } } },
     });
-    const donationRank   = myDonPoints > 0 ? donAhead.length + 1 : null;
-    const donationTotal  = await countDistinctUsers('DONATION');
+    const donationRank  = myDonPoints > 0 ? donAhead.length + 1 : null;
+    const donationTotal = await countDistinctUsers(PointReason.DONATION);
 
-    // Task rank
     const myTaskPts = await prisma.pointLedger.aggregate({
-      where: { userId, reason: 'TASK' }, _sum: { amount: true },
+      where: { userId, reason: PointReason.TASK }, _sum: { amount: true },
     });
     const myTaskPoints = myTaskPts._sum.amount ?? 0;
 
     const taskAhead = await prisma.pointLedger.groupBy({
       by:     ['userId'],
-      where:  { reason: 'TASK' },
+      where:  { reason: PointReason.TASK },
       _sum:   { amount: true },
       having: { amount: { _sum: { gt: myTaskPoints } } },
     });
     const taskRank  = myTaskPoints > 0 ? taskAhead.length + 1 : null;
-    const taskTotal = await countDistinctUsers('TASK');
+    const taskTotal = await countDistinctUsers(PointReason.TASK);
 
     const taskCount = await prisma.taskSubmission.count({
       where: { userId, status: 'APPROVED' },
@@ -312,8 +291,6 @@ export class LeaderboardService {
     };
   }
 
-  // ── MY ORG RANK ───────────────────────────────────────────────────────
-  // NEW: নিজের org এ নিজের position
   async getMyOrgRank(userId: string) {
     const membership = await prisma.orgMembership.findFirst({
       where:   { userId, status: 'APPROVED' },
@@ -328,35 +305,33 @@ export class LeaderboardService {
     });
     const memberIds = memberships.map(m => m.userId);
 
-    // Donation rank within org
     const myDonPts = await prisma.pointLedger.aggregate({
-      where: { userId, reason: 'DONATION' }, _sum: { amount: true },
+      where: { userId, reason: PointReason.DONATION }, _sum: { amount: true },
     });
     const myDonPoints = myDonPts._sum.amount ?? 0;
 
     const donAheadInOrg = await prisma.pointLedger.groupBy({
       by:     ['userId'],
-      where:  { userId: { in: memberIds }, reason: 'DONATION' },
+      where:  { userId: { in: memberIds }, reason: PointReason.DONATION },
       _sum:   { amount: true },
       having: { amount: { _sum: { gt: myDonPoints } } },
     });
     const orgDonRank  = myDonPoints > 0 ? donAheadInOrg.length + 1 : null;
-    const orgDonTotal = await countDistinctUsers('DONATION', memberIds);
+    const orgDonTotal = await countDistinctUsers(PointReason.DONATION, memberIds);
 
-    // Task rank within org
     const myTaskPts = await prisma.pointLedger.aggregate({
-      where: { userId, reason: 'TASK' }, _sum: { amount: true },
+      where: { userId, reason: PointReason.TASK }, _sum: { amount: true },
     });
     const myTaskPoints = myTaskPts._sum.amount ?? 0;
 
     const taskAheadInOrg = await prisma.pointLedger.groupBy({
       by:     ['userId'],
-      where:  { userId: { in: memberIds }, reason: 'TASK' },
+      where:  { userId: { in: memberIds }, reason: PointReason.TASK },
       _sum:   { amount: true },
       having: { amount: { _sum: { gt: myTaskPoints } } },
     });
     const orgTaskRank  = myTaskPoints > 0 ? taskAheadInOrg.length + 1 : null;
-    const orgTaskTotal = await countDistinctUsers('TASK', memberIds);
+    const orgTaskTotal = await countDistinctUsers(PointReason.TASK, memberIds);
 
     return {
       org: { id: membership.orgId, name: membership.org.name },
