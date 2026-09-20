@@ -13,7 +13,7 @@
 
   async function checkAuth() {
     try {
-      const res = await fetch('http://localhost:3001/auth/me', { credentials: 'include' });
+      const res = await fetch('https://localhost:3001/auth/me', { credentials: 'include' });
       if (res.ok) user = await res.json();
     } catch (err) { console.error(err); }
   }
@@ -25,7 +25,7 @@
     
     // Mock payment verify — call backend
     try {
-      const res = await fetch('http://localhost:3001/career/payment/verify', {
+      const res = await fetch('https://localhost:3001/career/payment/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

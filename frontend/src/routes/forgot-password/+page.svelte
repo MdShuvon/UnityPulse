@@ -19,7 +19,7 @@
 
     loading = true;
     try {
-      const res = await fetch('http://localhost:3001/auth/email-forgot-password', {
+      const res = await fetch('https://localhost:3001/auth/email-forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim().toLowerCase() }),

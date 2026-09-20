@@ -34,7 +34,7 @@
     searchLoading = true;
     try {
       const res = await fetch(
-        `http://localhost:3001/search/all?q=${encodeURIComponent(searchQuery)}`,
+        `https://localhost:3001/search/all?q=${encodeURIComponent(searchQuery)}`,
         {
           credentials: "include",
         },
@@ -91,7 +91,7 @@
       return;
     }
     try {
-      const res = await fetch('http://localhost:3001/notifications/count', {
+      const res = await fetch('https://localhost:3001/notifications/count', {
         credentials: 'include',
       });
       if (res.ok) {
@@ -109,7 +109,7 @@
 
     try {
       eventSource = new EventSource(
-        'http://localhost:3001/notifications/live',
+        'https://localhost:3001/notifications/live',
         { withCredentials: true }
       );
 
@@ -189,7 +189,7 @@
 
   async function handleLogout() {
     try {
-      await fetch("http://localhost:3001/auth/logout", {
+      await fetch("https://localhost:3001/auth/logout", {
         method: "POST",
         credentials: "include",
       });

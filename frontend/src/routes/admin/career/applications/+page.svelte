@@ -13,7 +13,7 @@
 
   async function fetchApplications() {
     try {
-      const res = await fetch('http://localhost:3001/admin/career/applications', {
+      const res = await fetch('https://localhost:3001/admin/career/applications', {
         credentials: 'include',
       });
       if (res.ok) {
@@ -30,7 +30,7 @@
 
   async function viewCV(applicationId: string) {
     try {
-      const res = await fetch(`http://localhost:3001/admin/career/applications/${applicationId}/cv`, {
+      const res = await fetch(`https://localhost:3001/admin/career/applications/${applicationId}/cv`, {
         credentials: 'include',
       });
       if (res.ok) {
@@ -51,7 +51,7 @@
     if (!rejectingAppId || isProcessing) return;
     isProcessing = true;
     try {
-      const res = await fetch(`http://localhost:3001/admin/career/applications/${rejectingAppId}/review`, {
+      const res = await fetch(`https://localhost:3001/admin/career/applications/${rejectingAppId}/review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -71,7 +71,7 @@
     if (isProcessing) return;
     isProcessing = true;
     try {
-      const res = await fetch(`http://localhost:3001/admin/career/applications/${applicationId}/review`, {
+      const res = await fetch(`https://localhost:3001/admin/career/applications/${applicationId}/review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

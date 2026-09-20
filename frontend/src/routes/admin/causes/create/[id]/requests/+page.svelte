@@ -13,7 +13,7 @@
 
   async function fetchRequests() {
     try {
-      const res = await fetch('http://localhost:3001/admin/causes/join-requests/pending', {
+      const res = await fetch('https://localhost:3001/admin/causes/join-requests/pending', {
         credentials: 'include'
       });
       if (res.ok) {
@@ -35,7 +35,7 @@
     }
 
     try {
-      const res = await fetch(`http://localhost:3001/admin/causes/join-requests/${requestId}/decision`, {
+      const res = await fetch(`https://localhost:3001/admin/causes/join-requests/${requestId}/decision`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

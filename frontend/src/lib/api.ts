@@ -1,87 +1,89 @@
-// src/lib/api.ts
-// Update to match your backend session-based auth
+// frontend/src/lib/api.ts
+// FULL REPLACEMENT — fixes issue #12 (duplicate api.js / api.ts) and the
+// 117 hardcoded "https://localhost:3001" strings across the frontend.
+//
+// ACTION: delete frontend/src/lib/api.js, keep only this file, and replace
+// every raw fetch('https://localhost:3001/...') call with api.get/post/...
+//
+// One place now owns: base URL, credentials, JSON handling, error shape.
 
-const BASE_URL = 'http://localhost:3001'; // Development
+import { PUBLIC_API_BASE_URL } from '$env/static/public';
 
-interface FetchOptions extends RequestInit {
-  skipAuth?: boolean;
+export const API_BASE = PUBLIC_API_BASE_URL || 'https://localhost:3001';
+
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+    public issues?: Array<{ field: string; message: string }>,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
 }
 
-export async function api(endpoint: string, options: FetchOptions = {}) {
-  const { skipAuth, ...fetchOptions } = options;
-  
-  const url = `${BASE_URL}${endpoint}`;
-  
-  const defaultHeaders: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-  
-  // Don't set Content-Type for FormData (multipart)
-  if (fetchOptions.body instanceof FormData) {
-    delete (defaultHeaders as any)['Content-Type'];
-  }
-  
-  const response = await fetch(url, {
-    ...fetchOptions,
+type FetchLike = typeof globalThis.fetch;
+
+interface RequestOptions {
+  /** Pass SvelteKit's `fetch` from a load function so SSR forwards cookies. */
+  fetch?: FetchLike;
+  headers?: Record<string, string>;
+  signal?: AbortSignal;
+}
+
+async function request<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+  opts: RequestOptions = {},
+): Promise<T> {
+  const doFetch = opts.fetch ?? globalThis.fetch;
+  const isFormData = body instanceof FormData;
+
+  const res = await doFetch(`${API_BASE}${path}`, {
+    method,
+    credentials: 'include', // session cookie — required on every call
     headers: {
-      ...defaultHeaders,
-      ...fetchOptions.headers,
+      ...(isFormData ? {} : body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...opts.headers,
     },
-    credentials: 'include', // Send cookies automatically
+    body: isFormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
+    signal: opts.signal,
   });
-  
-  // Handle 401 Unauthorized
-  if (response.status === 401 && !skipAuth) {
-    // Redirect to login
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
-    }
-    throw new Error('Session expired');
+
+  if (res.status === 204) return undefined as T;
+
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    throw new ApiError(
+      res.status,
+      data?.error ?? data?.message ?? `Request failed (${res.status})`,
+      data?.issues,
+    );
   }
-  
-  // Handle rate limiting
-  if (response.status === 429) {
-    throw new Error('অনেক বেশি request - একটু অপেক্ষা করো');
-  }
-  
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.error || data.message || 'Something went wrong');
-  }
-  
-  return data;
+
+  return data as T;
 }
 
-// Convenience methods
-export const get = (endpoint: string) => api(endpoint);
-export const post = (endpoint: string, body: any) => 
-  api(endpoint, { method: 'POST', body: JSON.stringify(body) });
-export const patch = (endpoint: string, body: any) => 
-  api(endpoint, { method: 'PATCH', body: JSON.stringify(body) });
-export const del = (endpoint: string) => 
-  api(endpoint, { method: 'DELETE' });
-
-// Auth specific API calls
-export const authApi = {
-  login: (email: string, password: string) => 
-    post('/api/auth/login', { email, password }),
-  register: (userData: any) => 
-    post('/api/auth/register', userData),
-  logout: () => 
-    post('/api/auth/logout', {}),
-  getCurrentUser: () => 
-    get('/api/auth/me'),
+export const api = {
+  get: <T>(path: string, opts?: RequestOptions) => request<T>('GET', path, undefined, opts),
+  post: <T>(path: string, body?: unknown, opts?: RequestOptions) => request<T>('POST', path, body, opts),
+  patch: <T>(path: string, body?: unknown, opts?: RequestOptions) => request<T>('PATCH', path, body, opts),
+  put: <T>(path: string, body?: unknown, opts?: RequestOptions) => request<T>('PUT', path, body, opts),
+  delete: <T>(path: string, opts?: RequestOptions) => request<T>('DELETE', path, undefined, opts),
 };
 
-// Notification specific API calls
-export const notifApi = {
-  getNotifications: () => 
-    get('/api/notifications'),
-  markAsRead: (id: string) => 
-    patch(`/api/notifications/${id}/read`, {}),
-  markAllAsRead: () => 
-    patch('/api/notifications/read-all', {}),
-  deleteNotification: (id: string) => 
-    del(`/api/notifications/${id}`),
-};
+/** SSE helper — EventSource cannot set headers, so the cookie must be same-site. */
+export function subscribe(path: string, onMessage: (data: any) => void): () => void {
+  const source = new EventSource(`${API_BASE}${path}`, { withCredentials: true });
+  source.onmessage = (e) => {
+    try {
+      onMessage(JSON.parse(e.data));
+    } catch {
+      /* keep-alive pings are not JSON */
+    }
+  };
+  return () => source.close();
+}

@@ -53,7 +53,7 @@
 
 async function fetchTaskForEdit(id: string) {
     try {
-      const res = await fetch(`http://localhost:3001/tasks/${id}`, {
+      const res = await fetch(`https://localhost:3001/tasks/${id}`, {
         credentials: 'include',
       });
       if (res.ok) {
@@ -97,8 +97,8 @@ async function fetchTaskForEdit(id: string) {
       };
 
       const url = isEditMode && taskId
-        ? `http://localhost:3001/admin/tasks/${taskId}`
-        : 'http://localhost:3001/admin/tasks';
+        ? `https://localhost:3001/admin/tasks/${taskId}`
+        : 'https://localhost:3001/admin/tasks';
 
       const res = await fetch(url, {
         method: isEditMode ? 'PATCH' : 'POST',
@@ -125,7 +125,7 @@ async function fetchTaskForEdit(id: string) {
 onMount(async () => {
   // Auth check
   try {
-    const authRes = await fetch('http://localhost:3001/auth/me', {
+    const authRes = await fetch('https://localhost:3001/auth/me', {
       credentials: 'include',
     });
     

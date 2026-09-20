@@ -129,7 +129,7 @@ $effect(() => {
     error = '';
     
     try {
-      const response = await fetch('http://localhost:3001/auth/verify-otp', {
+      const response = await fetch('https://localhost:3001/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -185,7 +185,7 @@ $effect(() => {
     error = '';
     
     try {
-      const response = await fetch('http://localhost:3001/auth/resend-otp', {
+      const response = await fetch('https://localhost:3001/auth/resend-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

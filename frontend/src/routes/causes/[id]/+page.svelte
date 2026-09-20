@@ -41,7 +41,7 @@
 
   async function fetchCause() {
     try {
-      const res = await fetch(`http://localhost:3001/causes/${causeId}`, {
+      const res = await fetch(`https://localhost:3001/causes/${causeId}`, {
         credentials: "include",
       });
       if (res.ok) {

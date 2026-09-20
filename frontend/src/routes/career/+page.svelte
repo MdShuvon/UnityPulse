@@ -45,7 +45,7 @@
   async function fetchJobs() {
     try {
       const res = await fetch(
-        "http://localhost:3001/career/jobs?limit=20&page=1",
+        "https://localhost:3001/career/jobs?limit=20&page=1",
         {
           credentials: "include",
         },

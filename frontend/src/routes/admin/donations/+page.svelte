@@ -23,7 +23,7 @@
 
   async function fetchUser() {
     try {
-      const res = await fetch('http://localhost:3001/auth/me', {
+      const res = await fetch('https://localhost:3001/auth/me', {
         credentials: 'include',
       });
       if (res.ok) user = await res.json();
@@ -63,7 +63,7 @@
 
     try {
       const res = await fetch(
-        `http://localhost:3001/admin/donations/projects/${notifyProject.id}/notify-creator`,
+        `https://localhost:3001/admin/donations/projects/${notifyProject.id}/notify-creator`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -114,7 +114,7 @@
 
   async function fetchProjects() {
     try {
-      const res = await fetch('http://localhost:3001/admin/donations/projects', {
+      const res = await fetch('https://localhost:3001/admin/donations/projects', {
         credentials: 'include',
       });
       if (res.ok) {
@@ -131,7 +131,7 @@
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
 
-      const res = await fetch(`http://localhost:3001/admin/donations/ledger?${params}`, {
+      const res = await fetch(`https://localhost:3001/admin/donations/ledger?${params}`, {
         credentials: 'include',
       });
       if (res.ok) {
@@ -161,7 +161,7 @@
     const newStatus = currentStatus === 'active' ? 'closed' : 'active';
     
     try {
-      const res = await fetch(`http://localhost:3001/admin/donations/projects/${projectId}`, {
+      const res = await fetch(`https://localhost:3001/admin/donations/projects/${projectId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

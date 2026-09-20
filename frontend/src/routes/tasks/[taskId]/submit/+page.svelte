@@ -25,7 +25,7 @@
 
   async function fetchTaskDetail() {
     try {
-      const res = await fetch(`http://localhost:3001/tasks/${taskId}`, {
+      const res = await fetch(`https://localhost:3001/tasks/${taskId}`, {
         credentials: "include",
       });
       if (res.ok) {
@@ -48,7 +48,7 @@
 
   async function checkAuth() {
     try {
-      const res = await fetch("http://localhost:3001/auth/me", {
+      const res = await fetch("https://localhost:3001/auth/me", {
         credentials: "include",
       });
       if (res.ok) {
@@ -123,7 +123,7 @@
         formData.append("textProof", textProof);
       }
 
-      const res = await fetch(`http://localhost:3001/tasks/${taskId}/submit`, {
+      const res = await fetch(`https://localhost:3001/tasks/${taskId}/submit`, {
         method: "POST",
         credentials: "include",
         body: formData,

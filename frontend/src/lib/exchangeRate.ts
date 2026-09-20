@@ -44,7 +44,7 @@ export async function fetchExchangeRates(): Promise<ExchangeRateData | null> {
     }
 
     // Fetch from backend
-    const res = await fetch('http://localhost:3001/exchange-rates', {
+    const res = await fetch('https://localhost:3001/exchange-rates', {
       credentials: 'include',
     });
 

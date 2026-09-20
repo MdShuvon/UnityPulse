@@ -33,7 +33,7 @@
 
   async function fetchProjects() {
     try {
-      const res = await fetch("http://localhost:3001/donations/projects", {
+      const res = await fetch("https://localhost:3001/donations/projects", {
         credentials: "include",
       });
       if (res.ok) {

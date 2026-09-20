@@ -27,7 +27,7 @@
   async function fetchTasks() {
     isLoading = true;
     try {
-      const res = await fetch('http://localhost:3001/admin/tasks', {
+      const res = await fetch('https://localhost:3001/admin/tasks', {
         credentials: 'include',
       });
       if (res.ok) {
@@ -49,7 +49,7 @@
     currentSubmissionIndex = 0;
     
     try {
-      const res = await fetch('http://localhost:3001/admin/tasks/submissions', {
+      const res = await fetch('https://localhost:3001/admin/tasks/submissions', {
         credentials: 'include',
       });
       if (res.ok) {
@@ -65,7 +65,7 @@
     if (isProcessing) return;
     isProcessing = true;
     try {
-      const res = await fetch(`http://localhost:3001/admin/tasks/submissions/${submissionId}`, {
+      const res = await fetch(`https://localhost:3001/admin/tasks/submissions/${submissionId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -100,7 +100,7 @@
     
     isProcessing = true;
     try {
-      const res = await fetch(`http://localhost:3001/admin/tasks/submissions/${rejectingSubmission.id}`, {
+      const res = await fetch(`https://localhost:3001/admin/tasks/submissions/${rejectingSubmission.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -136,7 +136,7 @@
     const newStatus = currentStatus === 'OPEN' ? 'CLOSED' : 'OPEN';
     
     try {
-      const res = await fetch(`http://localhost:3001/admin/tasks/${taskId}`, {
+      const res = await fetch(`https://localhost:3001/admin/tasks/${taskId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
