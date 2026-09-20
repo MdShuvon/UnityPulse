@@ -5,7 +5,7 @@
     "dev": "npx prisma generate && tsx watch src/server.ts",
     "build": "npx prisma generate && tsc --outDir dist",
     "start": "node dist/server.js",
-    "test": "tsx --test tests/**/*.test.ts",
+    "test": "tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit",
     "postinstall": "npx prisma generate",
     "db:push": "prisma db push"
