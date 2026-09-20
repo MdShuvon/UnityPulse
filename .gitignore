@@ -1,4 +1,103 @@
+# ============================
+# Dependencies
+# ============================
 **/node_modules/
+
+# ============================
+# Environment — never commit real secrets
+# ============================
 **/.env
 **/.env.*
 !**/.env.example
+
+# ============================
+# Build output
+# ============================
+**/.svelte-kit/
+**/build/
+**/dist/
+**/.output/
+**/.vercel/
+**/.netlify/
+**/.turbo/
+**/.cache/
+
+# ============================
+# Generated / scratch files
+# ============================
+project_structure.txt
+**/*.log
+**/npm-debug.log*
+**/yarn-error.log
+
+# ============================
+# Test output
+# ============================
+**/coverage/
+**/.nyc_output/
+
+# ============================
+# Editor / OS
+# ============================
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+.idea/
+*.swp
+*.swo
+*~
+**/.vscode/*
+!**/.vscode/extensions.json
+!**/.vscode/settings.json
+
+# ============================
+# Capacitor native build output
+# ============================
+frontend/android/app/build/
+frontend/android/app/release/
+frontend/android/app/debug/
+frontend/android/.gradle/
+frontend/android/.idea/
+frontend/android/.cxx/
+frontend/android/local.properties
+frontend/android/captures/
+frontend/ios/App/build/
+frontend/ios/App/Pods/
+frontend/ios/App/*.xcworkspace/xcuserdata/
+frontend/ios/App/*.xcodeproj/xcuserdata/
+
+# ============================
+# Prisma
+# ============================
+**/prisma/*.db
+
+# ============================
+# Docker (local overrides only)
+# ============================
+docker-compose.override.yml
+
+# ============================
+# act (local GitHub Actions)
+# ============================
+.actrc
+.secrets
+
+# ============================
+# Scratch / archive
+# ============================
+/scratch/
+/archive/
+# Temporary dev scripts
+check-role.sql
+check.sql
+fix-urls.sql
+revert-urls.sql
+update-role.sql
+backup_before_status_fix.sql
+
+# Generated
+project_structure_clean.txt
+
+# Certs
+certs/
