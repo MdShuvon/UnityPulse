@@ -82,6 +82,10 @@ jobs:
           echo "PUBLIC_API_BASE_URL=https://localhost:3001" > .env
         working-directory: frontend
 
+      - name: Svelte check
+        run: npx svelte-check --fail-on-warnings
+        working-directory: frontend  
+        
       - name: Build
         run: npm run build
         working-directory: frontend
