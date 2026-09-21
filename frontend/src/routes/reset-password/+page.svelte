@@ -34,7 +34,7 @@
 
     loading = true;
     try {
-      const res = await fetch('http://localhost:3001/auth/reset-password-email', {
+      const res = await fetch('https://localhost:3001/auth/reset-password-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

@@ -73,7 +73,7 @@
 
     // Check if already logged in
     try {
-      const response = await fetch("http://localhost:3001/auth/me", {
+      const response = await fetch("https://localhost:3001/auth/me", {
         credentials: "include",
       });
 
@@ -169,7 +169,7 @@
     isLoading = true;
 
     try {
-      const response = await fetch("http://localhost:3001/auth/login", {
+      const response = await fetch("https://localhost:3001/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -422,7 +422,7 @@
         <span>অথবা</span>
       </div>
 
-      <a href="http://localhost:3001/auth/google" class="google-btn">
+      <a href="https://localhost:3001/auth/google" class="google-btn">
         <svg width="20" height="20" viewBox="0 0 24 24">
           <path
             fill="#4285F4"

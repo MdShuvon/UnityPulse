@@ -30,10 +30,10 @@
   async function fetchLeaderboard() {
     try {
       const [donRes, taskRes, orgRes, myRankRes] = await Promise.all([
-        fetch("http://localhost:3001/leaderboard/donation?limit=20&page=1", { credentials: "include" }),
-        fetch("http://localhost:3001/leaderboard/task?limit=20&page=1", { credentials: "include" }),
-        fetch("http://localhost:3001/leaderboard/organization?limit=20", { credentials: "include" }),
-        fetch("http://localhost:3001/leaderboard/my-rank", { credentials: "include" }),
+        fetch("https://localhost:3001/leaderboard/donation?limit=20&page=1", { credentials: "include" }),
+        fetch("https://localhost:3001/leaderboard/task?limit=20&page=1", { credentials: "include" }),
+        fetch("https://localhost:3001/leaderboard/organization?limit=20", { credentials: "include" }),
+        fetch("https://localhost:3001/leaderboard/my-rank", { credentials: "include" }),
       ]);
 
       if (donRes.ok) {

@@ -1,10 +1,9 @@
 import { FastifyInstance } from 'fastify';
-import { minioClient, BUCKET, getFileUrl } from '../lib/minio';
+import { minioClient, BUCKET, urlFor } from '../lib/minio';
 import { requireAdmin } from '../middleware/authGuard';
 
 export async function photoRoutes(app: FastifyInstance) {
 
-  // POST /photos/upload - Upload photo (multipart)
   app.post('/photos/upload', { preHandler: requireAdmin }, async (req, reply) => {
     try {
       const parts = req.parts();
@@ -12,13 +11,11 @@ export async function photoRoutes(app: FastifyInstance) {
 
       for await (const part of parts) {
         if (part.type === 'file') {
-          // ── File type validation ──
           const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
           if (!allowedTypes.includes(part.mimetype)) {
             return reply.code(400).send({ error: 'শুধু JPG, PNG, WebP অনুমোদিত' });
           }
 
-          // ── File size validation ──
           const chunks: Buffer[] = [];
           let totalSize = 0;
           for await (const chunk of part.file) {
@@ -37,7 +34,7 @@ export async function photoRoutes(app: FastifyInstance) {
             'Content-Type': part.mimetype,
           });
 
-          uploadedUrl = getFileUrl(filename);
+          uploadedUrl = await urlFor(filename);
         }
       }
 
@@ -51,12 +48,11 @@ export async function photoRoutes(app: FastifyInstance) {
       return reply.code(500).send({ error: 'ছবি upload করতে সমস্যা হয়েছে' });
     }
   });
-  
-  // GET /photos/:filename - Redirect to MinIO public URL
+
   app.get('/photos/:filename', async (req, reply) => {
     try {
       const { filename } = req.params as { filename: string };
-      const publicUrl = getFileUrl(`cause/${filename}`);
+      const publicUrl = await urlFor(`cause/${filename}`);
       return reply.redirect(publicUrl);
     } catch (err) {
       console.error('Photo redirect error:', err);

@@ -104,7 +104,7 @@
 
   async function fetchProfile() {
     try {
-      const userRes = await fetch("http://localhost:3001/auth/me", {
+      const userRes = await fetch("https://localhost:3001/auth/me", {
         credentials: "include",
       });
       if (userRes.ok) {
@@ -115,7 +115,7 @@
       }
 
       const postsRes = await fetch(
-        `http://localhost:3001/users/${user.id}/posts?limit=20&page=1`,
+        `https://localhost:3001/users/${user.id}/posts?limit=20&page=1`,
         { credentials: "include" },
       );
       if (postsRes.ok) {
@@ -150,7 +150,7 @@
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("http://localhost:3001/profile/photo", {
+      const res = await fetch("https://localhost:3001/profile/photo", {
         method: "POST",
         credentials: "include",
         body: formData,
@@ -171,7 +171,7 @@
   async function deleteProfilePhoto() {
     if (!confirm("প্রোফাইল ছবি ডিলিট করতে চান?")) return;
     try {
-      const res = await fetch("http://localhost:3001/profile", {
+      const res = await fetch("https://localhost:3001/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -199,7 +199,7 @@
 
   async function saveProfile() {
     try {
-      const res = await fetch("http://localhost:3001/profile", {
+      const res = await fetch("https://localhost:3001/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -224,7 +224,7 @@
   async function handleLogout() {
     if (!confirm("আপনি কি লগআউট করতে চান?")) return;
     try {
-      await fetch("http://localhost:3001/auth/logout", {
+      await fetch("https://localhost:3001/auth/logout", {
         method: "POST",
         credentials: "include",
       });
@@ -271,7 +271,7 @@
         formData.append("content", postContent);
         formData.append("visibility", postVisibility);
         selectedPhotos.forEach((photo) => formData.append("photos", photo));
-        const res = await fetch("http://localhost:3001/posts", {
+        const res = await fetch("https://localhost:3001/posts", {
           method: "POST",
           credentials: "include",
           body: formData,
@@ -284,7 +284,7 @@
           fetchProfile();
         }
       } else {
-        const res = await fetch("http://localhost:3001/posts", {
+        const res = await fetch("https://localhost:3001/posts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -308,7 +308,7 @@
 
   async function toggleLike(postId: string) {
     try {
-      const res = await fetch(`http://localhost:3001/posts/${postId}/like`, {
+      const res = await fetch(`https://localhost:3001/posts/${postId}/like`, {
         method: "POST",
         credentials: "include",
       });
@@ -343,7 +343,7 @@
   async function deletePost(postId: string) {
     if (!confirm("পোস্ট ডিলিট করতে চান?")) return;
     try {
-      const res = await fetch(`http://localhost:3001/posts/${postId}`, {
+      const res = await fetch(`https://localhost:3001/posts/${postId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -356,7 +356,7 @@
   async function fetchComments(postId: string) {
     try {
       const res = await fetch(
-        `http://localhost:3001/posts/${postId}/comments?limit=20&page=1`,
+        `https://localhost:3001/posts/${postId}/comments?limit=20&page=1`,
         { credentials: "include" },
       );
       if (res.ok) {
@@ -380,7 +380,7 @@
     if (!content) return;
     try {
       const res = await fetch(
-        `http://localhost:3001/posts/${postId}/comments`,
+        `https://localhost:3001/posts/${postId}/comments`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -401,7 +401,7 @@
   async function toggleCommentLike(postId: string, commentId: string) {
     try {
       const res = await fetch(
-        `http://localhost:3001/posts/${postId}/comments/${commentId}/like`,
+        `https://localhost:3001/posts/${postId}/comments/${commentId}/like`,
         { method: "POST", credentials: "include" },
       );
       if (res.ok) {
@@ -428,7 +428,7 @@
     if (!confirm("কমেন্ট ডিলিট করতে চান?")) return;
     try {
       const res = await fetch(
-        `http://localhost:3001/posts/${postId}/comments/${commentId}`,
+        `https://localhost:3001/posts/${postId}/comments/${commentId}`,
         { method: "DELETE", credentials: "include" },
       );
       if (res.ok) {
@@ -463,7 +463,7 @@
     if (!editingCommentText.trim()) return;
     try {
       const res = await fetch(
-        `http://localhost:3001/posts/${postId}/comments/${commentId}`,
+        `https://localhost:3001/posts/${postId}/comments/${commentId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -503,7 +503,7 @@
     if (!parentId || !content) return;
     try {
       const res = await fetch(
-        `http://localhost:3001/posts/${postId}/comments`,
+        `https://localhost:3001/posts/${postId}/comments`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -541,7 +541,7 @@
   async function saveEditPost() {
     if (!editingPostId || !editingPostText.trim()) return;
     try {
-      const res = await fetch(`http://localhost:3001/posts/${editingPostId}`, {
+      const res = await fetch(`https://localhost:3001/posts/${editingPostId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

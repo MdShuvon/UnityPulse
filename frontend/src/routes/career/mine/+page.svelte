@@ -53,7 +53,7 @@
 
   async function fetchApplications() {
     try {
-      const res = await fetch("http://localhost:3001/career/my-applications", {
+      const res = await fetch("https://localhost:3001/career/my-applications", {
         credentials: "include",
       });
       if (res.ok) {

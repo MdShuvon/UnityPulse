@@ -52,7 +52,7 @@
         params.append('search', searchQuery);
       }
 
-      const res = await fetch(`http://localhost:3001/admin/users?${params}`, {
+      const res = await fetch(`https://localhost:3001/admin/users?${params}`, {
         credentials: 'include',
       });
       
@@ -71,7 +71,7 @@
 
   async function fetchCurrentUser() {
     try {
-      const res = await fetch('http://localhost:3001/auth/me', { credentials: 'include' });
+      const res = await fetch('https://localhost:3001/auth/me', { credentials: 'include' });
       if (res.ok) currentUser = await res.json();
     } catch (err) { console.error(err); }
   }
@@ -102,7 +102,7 @@
     
     isProcessing = true;
     try {
-      const res = await fetch(`http://localhost:3001/admin/users/${suspendTarget.id}/status`, {
+      const res = await fetch(`https://localhost:3001/admin/users/${suspendTarget.id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -123,7 +123,7 @@
     if (isProcessing) return;
     isProcessing = true;
     try {
-      const res = await fetch(`http://localhost:3001/admin/users/${userId}/status`, {
+      const res = await fetch(`https://localhost:3001/admin/users/${userId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -142,7 +142,7 @@
     
     isProcessing = true;
     try {
-      const res = await fetch(`http://localhost:3001/admin/users/${userId}/role`, {
+      const res = await fetch(`https://localhost:3001/admin/users/${userId}/role`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

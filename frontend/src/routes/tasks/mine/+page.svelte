@@ -33,7 +33,7 @@
 
   async function fetchMySubmissions() {
     try {
-      const res = await fetch("http://localhost:3001/tasks/mine", {
+      const res = await fetch("https://localhost:3001/tasks/mine", {
         credentials: "include",
       });
       if (res.ok) {

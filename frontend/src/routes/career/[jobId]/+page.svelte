@@ -47,7 +47,7 @@
 
   async function fetchJobDetail() {
     try {
-      const res = await fetch(`http://localhost:3001/career/jobs/${jobId}`, {
+      const res = await fetch(`https://localhost:3001/career/jobs/${jobId}`, {
         credentials: "include",
       });
 
@@ -65,7 +65,7 @@
 
   async function checkAuth() {
     try {
-      const res = await fetch("http://localhost:3001/auth/me", {
+      const res = await fetch("https://localhost:3001/auth/me", {
         credentials: "include",
       });
       if (res.ok) user = await res.json();

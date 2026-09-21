@@ -26,7 +26,7 @@
 async function fetchUserAndOrgs() {
   try {
     // Get current user
-    const userRes = await fetch('http://localhost:3001/auth/me', {
+    const userRes = await fetch('https://localhost:3001/auth/me', {
       credentials: 'include',
     });
     if (userRes.ok) {
@@ -34,7 +34,7 @@ async function fetchUserAndOrgs() {
       
       // SUPER_ADMIN হলে org list fetch করো
       if (user.role === 'SUPER_ADMIN') {
-        const orgRes = await fetch('http://localhost:3001/admin/organizations', {
+        const orgRes = await fetch('https://localhost:3001/admin/organizations', {
           credentials: 'include',
         });
         if (orgRes.ok) {
@@ -101,7 +101,7 @@ async function fetchUserAndOrgs() {
     isUploadingImage = true;
 
     try {
-      const presignRes = await fetch('http://localhost:3001/admin/uploads/presign', {
+      const presignRes = await fetch('https://localhost:3001/admin/uploads/presign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -138,7 +138,7 @@ async function fetchUserAndOrgs() {
 
   async function fetchProjectForEdit(id: string) {
     try {
-      const res = await fetch('http://localhost:3001/admin/donations/projects', {
+      const res = await fetch('https://localhost:3001/admin/donations/projects', {
         credentials: 'include',
       });
       if (res.ok) {
@@ -192,8 +192,8 @@ async function fetchUserAndOrgs() {
       }
 
       const url = isEditMode && projectId
-        ? `http://localhost:3001/admin/donations/projects/${projectId}`
-        : 'http://localhost:3001/admin/donations/projects';
+        ? `https://localhost:3001/admin/donations/projects/${projectId}`
+        : 'https://localhost:3001/admin/donations/projects';
 
       const res = await fetch(url, {
         method: isEditMode ? 'PATCH' : 'POST',

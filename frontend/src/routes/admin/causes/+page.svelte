@@ -10,7 +10,7 @@
 
   async function fetchCauses() {
     try {
-      const res = await fetch('http://localhost:3001/admin/causes', { credentials: 'include' });
+      const res = await fetch('https://localhost:3001/admin/causes', { credentials: 'include' });
       if (res.ok) {
         causes = await res.json();
       } else {

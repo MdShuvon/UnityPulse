@@ -14,6 +14,13 @@ function toBDDate(date: Date): Date {
 }
 function todayBD(): Date { return toBDDate(new Date()); }
 
+/** DB-তে key থাকে; দেখানোর সময় signed URL। পুরনো row-এর পূর্ণ URL যেমন আছে তেমন থাকে। */
+async function resolvePhotos(photos: string[]): Promise<string[]> {
+  return Promise.all(
+    photos.map((p) => (p.startsWith('http') ? p : fileService.getUrl(p))),
+  );
+}
+
 export class TaskService {
 
   // ── CREATE TASK ──────────────────────────────────────────────────────
@@ -314,8 +321,8 @@ export class TaskService {
     // Upload files
     const photoPaths: string[] = [];
     for (const f of bufferedFiles) {
-      const path = await fileService.uploadBuffer(f.buffer, f.mimetype, f.filename, 'proof');
-      photoPaths.push(fileService.getUrl(path));
+      const key = await fileService.uploadBuffer(f.buffer, f.mimetype, 'proof');
+      photoPaths.push(key); // private folder: key রাখো, URL নয়
     }
 
     // Create submission
@@ -436,7 +443,7 @@ export class TaskService {
             return { status: 'PENDING', task: { orgId: org.id } };
           })();
 
-    return prisma.taskSubmission.findMany({
+    const rows = await prisma.taskSubmission.findMany({
       where,
       include: {
         task: {
@@ -449,11 +456,15 @@ export class TaskService {
       },
       orderBy: { submittedAt: 'asc' },
     });
+
+    return Promise.all(
+      rows.map(async (r) => ({ ...r, proofPhotos: await resolvePhotos(r.proofPhotos) })),
+    );
   }
 
   // ── MY SUBMISSIONS ───────────────────────────────────────────────────
   async getMySubmissions(userId: string) {
-    return prisma.taskSubmission.findMany({
+    const rows = await prisma.taskSubmission.findMany({
       where: { userId },
       include: {
         task: {
@@ -465,8 +476,11 @@ export class TaskService {
       },
       orderBy: { submittedAt: 'desc' },
     });
-  }
 
+    return Promise.all(
+      rows.map(async (r) => ({ ...r, proofPhotos: await resolvePhotos(r.proofPhotos) })),
+    );
+  }
   // ── ADMIN TASK LIST ──────────────────────────────────────────────────
   async getAdminTasks(adminId: string) {
     const admin = await prisma.user.findUnique({
@@ -503,7 +517,7 @@ export class TaskService {
 
     return prisma.task.update({
       where: { id: taskId },
-      data: { status },
+      data: { status: status as 'OPEN' | 'CLOSED' },
     });
   }
 }

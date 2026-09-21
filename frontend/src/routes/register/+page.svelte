@@ -113,7 +113,7 @@
   // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Check Auth on Mount Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   onMount(async () => {
     try {
-      const response = await fetch("http://localhost:3001/auth/me", {
+      const response = await fetch("https://localhost:3001/auth/me", {
         credentials: "include",
       });
 
@@ -316,7 +316,7 @@
         password: "***",
       });
 
-      const response = await fetch("http://localhost:3001/auth/register", {
+      const response = await fetch("https://localhost:3001/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

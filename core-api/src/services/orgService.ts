@@ -4,8 +4,8 @@ import { notificationService } from './notificationService';
 import { auditService } from './auditService';
 import { MultipartFile } from '@fastify/multipart';
 import CryptoJS from 'crypto-js';
-
-const NID_KEY = process.env.NID_ENCRYPTION_KEY || 'default-key-change-this!!!!!!!!';
+import { env } from '../config/env';
+const NID_KEY = env.NID_ENCRYPTION_KEY;
 
 // NID encrypt করো — DB তে plain text যাবে না
 function encryptNid(nid: string): string {
@@ -66,7 +66,7 @@ export class OrgService {
 
     // NID photo upload via FileService
     const nidPath = await fileService.upload(nidPhotoFile, 'nid');
-    const nidUrl  = fileService.getUrl(nidPath);
+    const nidUrl  = await fileService.getUrl(nidPath);
 
     // NID number encrypt করো
     const encryptedNid = encryptNid(nidNumber);

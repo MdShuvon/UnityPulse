@@ -15,7 +15,7 @@
     currentPath = window.location.pathname;
     
     try {
-      const res = await fetch('http://localhost:3001/auth/me', { credentials: 'include' });
+      const res = await fetch('https://localhost:3001/auth/me', { credentials: 'include' });
       if (res.ok) {
         user = await res.json();
         if (!['SUPER_ADMIN', 'LOCAL_ADMIN'].includes(user.role)) {

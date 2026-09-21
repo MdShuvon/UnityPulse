@@ -31,7 +31,7 @@
 
   async function fetchJobDetail() {
     try {
-      const res = await fetch(`http://localhost:3001/career/jobs/${jobId}`, {
+      const res = await fetch(`https://localhost:3001/career/jobs/${jobId}`, {
         credentials: "include",
       });
       if (res.ok) {
@@ -48,7 +48,7 @@
 
   async function checkAuth() {
     try {
-      const res = await fetch("http://localhost:3001/auth/me", {
+      const res = await fetch("https://localhost:3001/auth/me", {
         credentials: "include",
       });
       if (res.ok) {
@@ -101,7 +101,7 @@
       }
 
       const res = await fetch(
-        `http://localhost:3001/career/jobs/${jobId}/apply`,
+        `https://localhost:3001/career/jobs/${jobId}/apply`,
         {
           method: "POST",
           credentials: "include",
@@ -116,7 +116,7 @@
         if (job.applicationFee > 0) {
           // Start payment
           const paymentRes = await fetch(
-            "http://localhost:3001/career/payment/initiate",
+            "https://localhost:3001/career/payment/initiate",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },

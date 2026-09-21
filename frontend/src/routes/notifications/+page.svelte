@@ -32,7 +32,7 @@
     isLoading = true;
     try {
       const res = await fetch(
-        `http://localhost:3001/notifications?page=${pageNum}&limit=20&filter=${filter}`,
+        `https://localhost:3001/notifications?page=${pageNum}&limit=20&filter=${filter}`,
         { credentials: 'include' }
       );
       if (res.ok) {
@@ -49,7 +49,7 @@
 
   async function fetchUnreadCount() {
     try {
-      const res = await fetch('http://localhost:3001/notifications/count', {
+      const res = await fetch('https://localhost:3001/notifications/count', {
         credentials: 'include',
       });
       if (res.ok) {
@@ -64,7 +64,7 @@
   async function markAsRead(notif: any) {
     if (notif.isRead) return;
     try {
-      const res = await fetch(`http://localhost:3001/notifications/${notif.id}/read`, {
+      const res = await fetch(`https://localhost:3001/notifications/${notif.id}/read`, {
         method: 'PATCH',
         credentials: 'include',
       });
@@ -83,7 +83,7 @@
     if (isMarkingAll || unreadCount === 0) return;
     isMarkingAll = true;
     try {
-      const res = await fetch('http://localhost:3001/notifications/read-all', {
+      const res = await fetch('https://localhost:3001/notifications/read-all', {
         method: 'PATCH',
         credentials: 'include',
       });

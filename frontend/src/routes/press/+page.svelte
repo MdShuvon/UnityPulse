@@ -21,7 +21,7 @@
   let hasMore = $state(true);
   let loadingMore = $state(false);
 
-  const API_URL = 'http://localhost:3001';
+  const API_URL = 'https://localhost:3001';
 
   function decodeHtml(html: string): string {
     if (!html) return '';

@@ -23,12 +23,12 @@
     try {
       const [userRes, dashboardRes, highlightsRes, causeRes] =
         await Promise.all([
-          fetch("http://localhost:3001/auth/me", { credentials: "include" }),
-          fetch("http://localhost:3001/home", { credentials: "include" }),
-          fetch("http://localhost:3001/home/highlights", {
+          fetch("https://localhost:3001/auth/me", { credentials: "include" }),
+          fetch("https://localhost:3001/home", { credentials: "include" }),
+          fetch("https://localhost:3001/home/highlights", {
             credentials: "include",
           }),
-          fetch("http://localhost:3001/causes/featured", {
+          fetch("https://localhost:3001/causes/featured", {
             credentials: "include",
           }),
         ]);

@@ -20,7 +20,7 @@
 
   async function fetchJobs() {
     try {
-      const res = await fetch('http://localhost:3001/admin/career/jobs', {
+      const res = await fetch('https://localhost:3001/admin/career/jobs', {
         credentials: 'include',
       });
       if (res.ok) {
@@ -42,7 +42,7 @@
     const newStatus = currentStatus === 'OPEN' ? 'CLOSED' : 'OPEN';
     
     try {
-      const res = await fetch(`http://localhost:3001/admin/career/jobs/${jobId}`, {
+      const res = await fetch(`https://localhost:3001/admin/career/jobs/${jobId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

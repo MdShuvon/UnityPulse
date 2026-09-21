@@ -37,7 +37,7 @@
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch('http://localhost:3001/photos/upload', {
+      const res = await fetch('https://localhost:3001/photos/upload', {
         method: 'POST',
         credentials: 'include',
         body: formData,
@@ -65,7 +65,7 @@
 
   async function fetchCauseForEdit(id: string) {
     try {
-      const res = await fetch('http://localhost:3001/admin/causes', {
+      const res = await fetch('https://localhost:3001/admin/causes', {
         credentials: 'include',
       });
       if (res.ok) {
@@ -96,8 +96,8 @@
 
     try {
       const url = isEditMode && causeId
-        ? `http://localhost:3001/admin/causes/${causeId}`
-        : 'http://localhost:3001/admin/causes';
+        ? `https://localhost:3001/admin/causes/${causeId}`
+        : 'https://localhost:3001/admin/causes';
 
       const res = await fetch(url, {
         method: isEditMode ? 'PATCH' : 'POST',
@@ -128,7 +128,7 @@
 
   onMount(async () => {
     try {
-      const authRes = await fetch('http://localhost:3001/auth/me', {
+      const authRes = await fetch('https://localhost:3001/auth/me', {
         credentials: 'include',
       });
       

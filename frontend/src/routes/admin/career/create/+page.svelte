@@ -23,7 +23,7 @@
 
   async function fetchJobForEdit(jobId: string) {
     try {
-      const res = await fetch(`http://localhost:3001/career/jobs/${jobId}`, {
+      const res = await fetch(`https://localhost:3001/career/jobs/${jobId}`, {
         credentials: 'include',
       });
       if (res.ok) {
@@ -56,7 +56,7 @@
     
     try {
       if (isEditMode && editJobId) {
-        const res = await fetch(`http://localhost:3001/admin/career/jobs/${editJobId}`, {
+        const res = await fetch(`https://localhost:3001/admin/career/jobs/${editJobId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -75,7 +75,7 @@
           formError = data.error || 'Update failed';
         }
       } else {
-        const res = await fetch('http://localhost:3001/admin/career/jobs', {
+        const res = await fetch('https://localhost:3001/admin/career/jobs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

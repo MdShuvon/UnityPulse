@@ -13,6 +13,72 @@ enum PostVisibility {
   ORG_ONLY
 }
 
+enum Role {
+  MEMBER
+  LOCAL_ADMIN
+  SUPER_ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVIEWED
+  DISMISSED
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  PENDING_PAYMENT
+  ACCEPTED
+  REJECTED
+}
+
+enum FeeStatus {
+  FREE
+  PENDING
+  VERIFIED
+}
+
+enum PaymentStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+}
+
+enum DonationStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  CLOSED
+}
+
+enum CauseStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+enum OpenClosedStatus {
+  OPEN
+  CLOSED
+}
+
+enum PointReason {
+  DONATION
+  TASK
+}
+
 // ─── USER ───────────────────────────────────────
 model User {
   id              String    @id @default(cuid())
@@ -20,7 +86,7 @@ model User {
   email           String    @unique
   phone           String    @unique
   password        String
-  role            String    @default("MEMBER")
+  role            Role      @default(MEMBER)
   isVerified      Boolean   @default(false)
   twoFASecret     String?
   twoFAEnabled    Boolean   @default(false)
@@ -51,10 +117,10 @@ model User {
   adminApplication LocalAdminApplication?
   donationProjects DonationProject[]      @relation("ProjectCreator")
 
-  accountStatus     String?   @default("ACTIVE")
-  suspendedAt       DateTime?
-  suspendedBy       String?
-  suspensionReason  String?
+  accountStatus    AccountStatus @default(ACTIVE)
+  suspendedAt      DateTime?
+  suspendedBy      String?
+  suspensionReason String?
 }
 
 // ─── AREA + ORG ──────────────────────────────────
@@ -87,14 +153,14 @@ model Organization {
 }
 
 model OrgMembership {
-  id        String    @id @default(cuid())
+  id        String       @id @default(cuid())
   userId    String
   orgId     String
-  status    String    @default("PENDING")
+  status    ReviewStatus @default(PENDING)
   nidNumber String
   nidPhoto  String
   joinedAt  DateTime?
-  createdAt DateTime  @default(now())
+  createdAt DateTime     @default(now())
 
   user User         @relation(fields: [userId], references: [id])
   org  Organization @relation(fields: [orgId], references: [id])
@@ -104,14 +170,14 @@ model OrgMembership {
 
 // ─── DONATION ────────────────────────────────────
 model Cause {
-  id           String      @id @default(cuid())
-  title        String
-  story        String
-  coverImage   String?
-  isFeatured   Boolean     @default(false)
-  status       String      @default("ACTIVE")
-  createdBy    String
-  createdAt    DateTime    @default(now())
+  id         String      @id @default(cuid())
+  title      String
+  story      String
+  coverImage String?
+  isFeatured Boolean     @default(false)
+  status     CauseStatus @default(ACTIVE)
+  createdBy  String
+  createdAt  DateTime    @default(now())
 
   projects     DonationProject[]
   joinRequests CauseJoinRequest[]
@@ -121,56 +187,56 @@ model Cause {
 }
 
 model DonationProject {
-  id              String    @id @default(cuid())
+  id              String        @id @default(cuid())
   title           String
   description     String
   goalAmount      Float
-  collectedAmount Float     @default(0)
+  collectedAmount Float         @default(0)
   deadline        DateTime?
-  status          String    @default("active")
+  status          ProjectStatus @default(ACTIVE)
   orgId           String
   createdBy       String
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime      @default(now())
   coverImage      String?
   causeId         String?
 
-  org           Organization       @relation(fields: [orgId], references: [id])
-  cause         Cause?             @relation(fields: [causeId], references: [id])
-  creator       User               @relation("ProjectCreator", fields: [createdBy], references: [id])
-  donations     Donation[]
-  expenses      ProjectExpense[]
-  joinRequests  CauseJoinRequest[]
+  org          Organization       @relation(fields: [orgId], references: [id])
+  cause        Cause?             @relation(fields: [causeId], references: [id])
+  creator      User               @relation("ProjectCreator", fields: [createdBy], references: [id])
+  donations    Donation[]
+  expenses     ProjectExpense[]
+  joinRequests CauseJoinRequest[]
 
   @@index([causeId])
   @@index([createdBy])
 }
 
 model FaqItem {
-  id        String  @id @default(cuid())
-  causeId   String?
-  question  String
-  answer    String
-  order     Int     @default(0)
+  id       String  @id @default(cuid())
+  causeId  String?
+  question String
+  answer   String
+  order    Int     @default(0)
 
-  cause     Cause?  @relation(fields: [causeId], references: [id])
+  cause Cause? @relation(fields: [causeId], references: [id])
 
   @@index([causeId])
 }
 
 model CauseJoinRequest {
-  id          String    @id @default(cuid())
+  id          String       @id @default(cuid())
   causeId     String
   projectId   String
   requestedBy String
   note        String?
-  status      String    @default("PENDING")
+  status      ReviewStatus @default(PENDING)
   reviewNote  String?
   reviewedBy  String?
   reviewedAt  DateTime?
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime     @default(now())
 
-  cause       Cause            @relation(fields: [causeId], references: [id])
-  project     DonationProject  @relation(fields: [projectId], references: [id])
+  cause   Cause           @relation(fields: [causeId], references: [id])
+  project DonationProject @relation(fields: [projectId], references: [id])
 
   @@index([causeId, status])
   @@index([projectId])
@@ -188,7 +254,7 @@ model ProjectExpense {
 }
 
 model Donation {
-  id         String   @id @default(cuid())
+  id         String         @id @default(cuid())
   projectId  String
   amount     Float
   method     String
@@ -196,9 +262,9 @@ model Donation {
   guestName  String?
   guestPhone String?
   guestEmail String?
-  paymentRef String?  @unique
-  status     String   @default("VERIFIED")
-  createdAt  DateTime @default(now())
+  paymentRef String?        @unique
+  status     DonationStatus @default(PENDING)
+  createdAt  DateTime       @default(now())
 
   project   DonationProject @relation(fields: [projectId], references: [id])
   user      User?           @relation(fields: [userId], references: [id])
@@ -207,17 +273,17 @@ model Donation {
 
 // ─── TASK ────────────────────────────────────────
 model Task {
-  id          String   @id @default(cuid())
+  id          String           @id @default(cuid())
   title       String
   description String
-  date        DateTime @db.Date
-  pointValue  Int      @default(10)
-  status      String   @default("OPEN")
+  date        DateTime         @db.Date
+  pointValue  Int              @default(10)
+  status      OpenClosedStatus @default(OPEN)
   areaId      String?
   orgId       String?
   createdBy   String
-  createdAt   DateTime @default(now())
-  proofType   String   @default("PHOTO")
+  createdAt   DateTime         @default(now())
+  proofType   String           @default("PHOTO")
 
   area        Area?            @relation(fields: [areaId], references: [id])
   org         Organization?    @relation(fields: [orgId], references: [id])
@@ -225,14 +291,14 @@ model Task {
 }
 
 model TaskSubmission {
-  id            String    @id @default(cuid())
+  id            String       @id @default(cuid())
   taskId        String
   userId        String
   proofPhotos   String[]
-  status        String    @default("PENDING")
+  status        ReviewStatus @default(PENDING)
   reviewedBy    String?
   reviewNote    String?
-  submittedAt   DateTime  @default(now())
+  submittedAt   DateTime     @default(now())
   reviewedAt    DateTime?
   pointsAwarded Int?
 
@@ -244,12 +310,12 @@ model TaskSubmission {
 
 // ─── POINTS ──────────────────────────────────────
 model PointLedger {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   userId    String
   amount    Int
-  reason    String
+  reason    PointReason
   refId     String
-  createdAt DateTime @default(now())
+  createdAt DateTime    @default(now())
 
   user User @relation(fields: [userId], references: [id])
 }
@@ -306,20 +372,20 @@ model Like {
   post    Post?    @relation(fields: [postId], references: [id])
   comment Comment? @relation(fields: [commentId], references: [id])
 
-  @@unique([userId, postId])
-  @@unique([userId, commentId])
+  @@index([userId, postId])
+  @@index([userId, commentId])
 }
 
 model Report {
-  id         String   @id @default(cuid())
+  id         String       @id @default(cuid())
   reporterId String
   targetId   String
-  targetType String   @default("POST")
+  targetType String       @default("POST")
   reason     String
-  status     String   @default("PENDING")
+  status     ReviewStatus @default(PENDING)
   reviewNote String?
   reviewedBy String?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime     @default(now())
 
   reporter User @relation(fields: [reporterId], references: [id])
 
@@ -328,7 +394,7 @@ model Report {
 
 // ─── CAREER ──────────────────────────────────────
 model JobPost {
-  id             String   @id @default(cuid())
+  id             String           @id @default(cuid())
   title          String
   department     String
   location       String
@@ -336,10 +402,10 @@ model JobPost {
   description    String
   requirements   String
   experience     String?
-  applicationFee Float    @default(0)
-  status         String   @default("OPEN")
+  applicationFee Float            @default(0)
+  status         OpenClosedStatus @default(OPEN)
   createdBy      String
-  createdAt      DateTime @default(now())
+  createdAt      DateTime         @default(now())
 
   deadline DateTime? // ← ADD: application deadline
 
@@ -347,15 +413,15 @@ model JobPost {
 }
 
 model JobApplication {
-  id          String   @id @default(cuid())
-  jobId       String
-  userId      String
-  cvPath      String
-  paymentRef  String?  @unique
-  feeStatus   String   @default("FREE")
-  status      String   @default("SUBMITTED")
-  reviewNote  String?
-  createdAt   DateTime @default(now())
+  id         String            @id @default(cuid())
+  jobId      String
+  userId     String
+  cvPath     String
+  paymentRef String?           @unique
+  feeStatus  FeeStatus         @default(FREE)
+  status     ApplicationStatus @default(SUBMITTED)
+  reviewNote String?
+  createdAt  DateTime          @default(now())
 
   job      JobPost   @relation(fields: [jobId], references: [id])
   user     User      @relation(fields: [userId], references: [id])
@@ -365,15 +431,15 @@ model JobApplication {
 }
 
 model Payment {
-  id            String    @id @default(cuid())
+  id            String        @id @default(cuid())
   applicationId String?
-  gatewayTrxId  String?   @unique
+  gatewayTrxId  String?       @unique
   amount        Int // paisa-তে store হবে
   method        String?
-  status        String    @default("INITIATED") // INITIATED, SUCCESS, FAILED
+  status        PaymentStatus @default(INITIATED)
   rawPayload    Json?
   verifiedAt    DateTime?
-  createdAt     DateTime  @default(now())
+  createdAt     DateTime      @default(now())
 
   application JobApplication? @relation(fields: [applicationId], references: [id])
 
@@ -387,7 +453,7 @@ model Notification {
   type      String // String রাখো — enum করলে migration break হবে
   message   String
   refId     String?
-  refTitle  String?  
+  refTitle  String?
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
@@ -411,21 +477,21 @@ model AuditLog {
 }
 
 model LocalAdminApplication {
-  id              String    @id @default(cuid())
-  userId          String    @unique
+  id              String       @id @default(cuid())
+  userId          String       @unique
   areaId          String // ← এই field থাকতে হবে!
   orgName         String
   memberCount     Int
   bankProofUrl    String
   memberListUrl   String?
-  isEmergency     Boolean   @default(false)
+  isEmergency     Boolean      @default(false)
   emergencyReason String?
   emergencyProof  String?
-  status          String    @default("pending")
+  status          ReviewStatus @default(PENDING)
   reviewedBy      String?
   reviewNote      String?
   reviewedAt      DateTime?
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime     @default(now())
 
   user User @relation(fields: [userId], references: [id])
   area Area @relation(fields: [areaId], references: [id]) // ← relation থাকতে হবে

@@ -56,7 +56,7 @@
   async function fetchPublicProfile() {
     try {
       // Check current user
-      const meRes = await fetch("http://localhost:3001/auth/me", {
+      const meRes = await fetch("https://localhost:3001/auth/me", {
         credentials: "include",
       });
       if (meRes.ok) {
@@ -66,7 +66,7 @@
 
       // Fetch profile
       const profileRes = await fetch(
-        `http://localhost:3001/profile/${userId}`,
+        `https://localhost:3001/profile/${userId}`,
         { credentials: "include" },
       );
       if (profileRes.ok) {
@@ -78,7 +78,7 @@
 
       // Fetch posts
       const postsRes = await fetch(
-        `http://localhost:3001/profile/${userId}/posts?limit=20&page=1`,
+        `https://localhost:3001/profile/${userId}/posts?limit=20&page=1`,
         { credentials: "include" },
       );
       if (postsRes.ok) {
@@ -88,7 +88,7 @@
 
       // Fetch follow counts
       const followRes = await fetch(
-        `http://localhost:3001/profile/${userId}/follow-counts`,
+        `https://localhost:3001/profile/${userId}/follow-counts`,
         { credentials: "include" },
       );
       if (followRes.ok) {
@@ -100,7 +100,7 @@
       // Check if following
       if (currentUserId && currentUserId !== userId) {
         const isFollowingRes = await fetch(
-          `http://localhost:3001/profile/${userId}/is-following`,
+          `https://localhost:3001/profile/${userId}/is-following`,
           { credentials: "include" },
         );
         if (isFollowingRes.ok) {
@@ -126,7 +126,7 @@
     }
     try {
       const res = await fetch(
-        `http://localhost:3001/profile/${userId}/follow`,
+        `https://localhost:3001/profile/${userId}/follow`,
         {
           method: "POST",
           credentials: "include",
@@ -148,7 +148,7 @@
       return;
     }
     try {
-      const res = await fetch(`http://localhost:3001/posts/${postId}/like`, {
+      const res = await fetch(`https://localhost:3001/posts/${postId}/like`, {
         method: "POST",
         credentials: "include",
       });
