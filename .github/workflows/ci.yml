@@ -80,6 +80,8 @@ jobs:
       - name: Svelte check
         run: npx svelte-check --fail-on-warnings
         working-directory: frontend
+        env:
+          PUBLIC_API_BASE_URL: https://localhost:3001
 
       - name: Build
         run: npm run build

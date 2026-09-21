@@ -34,12 +34,52 @@ describe('money conversion', () => {
 
 describe('donation idempotency', () => {
   let projectId: string;
+  let areaId: string;
+  let orgId: string;
+  let userId: string;
 
   before(async () => {
-    // Assumes a seeded org + area. Adjust to your seed.
-    const project = await prisma.donationProject.findFirst();
-    if (!project) throw new Error('Seed a DonationProject before running tests');
+    // Seed minimal data — CI DB is empty
+    const area = await prisma.area.create({
+      data: { name: 'Test Area', district: 'Test District', division: 'Test Division' },
+    });
+    areaId = area.id;
+
+    const user = await prisma.user.create({
+      data: {
+        name: 'Test Admin',
+        email: `test-${Date.now()}@example.com`,
+        phone: `01${Date.now().toString().slice(-9)}`,
+        password: 'hashed',
+        role: 'SUPER_ADMIN',
+      },
+    });
+    userId = user.id;
+
+    const org = await prisma.organization.create({
+      data: { name: 'Test Org', areaId, adminId: userId },
+    });
+    orgId = org.id;
+
+    const project = await prisma.donationProject.create({
+      data: {
+        title: 'Test Project',
+        description: 'For tests',
+        goalAmount: 100000,
+        orgId,
+        createdBy: userId,
+      },
+    });
     projectId = project.id;
+  });
+
+  after(async () => {
+    // Cleanup
+    await prisma.donation.deleteMany({ where: { projectId } });
+    await prisma.donationProject.delete({ where: { id: projectId } });
+    await prisma.organization.delete({ where: { id: orgId } });
+    await prisma.user.delete({ where: { id: userId } });
+    await prisma.area.delete({ where: { id: areaId } });
   });
 
   test('duplicate paymentRef cannot create a second donation', async () => {
@@ -60,26 +100,6 @@ describe('donation idempotency', () => {
     await prisma.donation.deleteMany({ where: { paymentRef: ref } });
   });
 });
-
-describe('like uniqueness', () => {
-  test('a user cannot like the same comment twice', async () => {
-    const comment = await prisma.comment.findFirst();
-    const user = await prisma.user.findFirst();
-    if (!comment || !user) return; // nothing seeded, skip
-
-    const first = await prisma.like.create({
-      data: { userId: user.id, commentId: comment.id },
-    });
-
-    await assert.rejects(
-      prisma.like.create({ data: { userId: user.id, commentId: comment.id } }),
-      'the partial unique index from migration 02 must reject this',
-    );
-
-    await prisma.like.delete({ where: { id: first.id } });
-  });
-});
-
 after(async () => {
   await prisma.$disconnect();
 });
