@@ -1,8 +1,11 @@
-// frontend/src/hooks.server.ts
 import type { Handle } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import { Agent, fetch as undiciFetch } from 'undici';
 
-const API_BASE = env.API_BASE_URL ?? 'http://127.0.0.1:3001';
+const API_BASE = process.env.API_BASE_URL || 'https://localhost:3001';
+
+const localTlsAgent = new Agent({
+  connect: { rejectUnauthorized: false },
+});
 
 export const handle: Handle = async ({ event, resolve }) => {
   const cookie = event.request.headers.get('cookie') ?? '';
@@ -13,20 +16,18 @@ export const handle: Handle = async ({ event, resolve }) => {
   }
 
   try {
-    // Node fetch self-signed cert reject করে — dev-এ allow
-    const prev = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
-    const res = await fetch(`${API_BASE}/auth/me`, {
+    const res = await undiciFetch(`${API_BASE}/auth/me`, {
       headers: { cookie },
       signal: AbortSignal.timeout(5000),
-    });
+      dispatcher: localTlsAgent,
+    } as any);
 
-    if (prev === undefined) delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-    else process.env.NODE_TLS_REJECT_UNAUTHORIZED = prev;
-
-    console.log('[hooks] status:', res.status);
-    event.locals.user = res.ok ? await res.json() : null;
+    if (res.ok) {
+      const data = await res.json();
+      event.locals.user = data as App.Locals['user'];
+    } else {
+      event.locals.user = null;
+    }
   } catch (err) {
     console.error('[hooks] fetch error:', err);
     event.locals.user = null;

@@ -133,7 +133,21 @@ async function start() {
       },
       set: async (sid, session, cb) => {
         try {
-          await redis.set(`sess:${sid}`, JSON.stringify(session), 'EX', 604800);
+          // @fastify/session's Session instance stores custom fields
+          // (userId, role) non-enumerably, so direct access via
+          // (session as any).userId returns undefined. Use the Session
+          // instance's own toJSON()/data extraction, then merge cookie.
+          const sessionData =
+            typeof (session as any).toJSON === 'function'
+              ? (session as any).toJSON()
+              : { ...(session as any) };
+
+          const payload = {
+            ...sessionData,
+            cookie: session.cookie,
+          };
+
+          await redis.set(`sess:${sid}`, JSON.stringify(payload), 'EX', 604800);
           cb(null);
         } catch (err) {
           cb(err as Error);

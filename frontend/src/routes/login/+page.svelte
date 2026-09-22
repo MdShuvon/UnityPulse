@@ -1,5 +1,6 @@
 <!-- src/routes/login/+page.svelte -->
 <script lang="ts">
+   let { data } = $props();
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
@@ -63,31 +64,13 @@
   };
 
   // ─── Check Auth on Mount ───────────────────────
-  onMount(async () => {
-    // Check for remembered email
+ onMount(() => {
     const remembered = localStorage.getItem("rememberedEmail");
     if (remembered) {
       email = remembered;
       rememberMe = true;
     }
-
-    // Check if already logged in
-    try {
-      const response = await fetch("https://localhost:3001/auth/me", {
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const user = await response.json();
-        const redirectTo = "/home";
-        await goto(redirectTo);
-        return;
-      }
-    } catch (error) {
-      // Not authenticated - stay on page
-    } finally {
-      isCheckingAuth = false;
-    }
+    isCheckingAuth = false;
   });
 
   // ─── Toast Notification ────────────────────────
@@ -194,15 +177,13 @@
       } else {
         localStorage.removeItem("rememberedEmail");
       }
-
+      
       // Show success briefly
       showToastMessage("লগইন সফল!", "success");
-
-      // Redirect to home
-      setTimeout(async () => {
-        const redirectTo = "/home";
-        await goto(redirectTo);
-      }, 500);
+      
+      // Redirect to home — invalidateAll দিয়ে root layout data re-fetch করাতে হবে,
+      // নাহলে নতুন user state header/nav-এ propagate হবে না
+      await goto("/home", { invalidateAll: true });
     } catch (error) {
       if (error instanceof TypeError && error.message === "Failed to fetch") {
         showToastMessage(labels.networkError, "error");

@@ -37,7 +37,10 @@ const envSchema = z.object({
   // ── MinIO (issue #16) ────────────────────────────────────────────────────
   MINIO_ENDPOINT: z.string().default('localhost'),
   MINIO_PORT: z.coerce.number().int().positive().default(9000),
-  MINIO_USE_SSL: z.coerce.boolean().default(false),
+  MINIO_USE_SSL: z
+  .string()
+  .transform((v) => v === 'true' || v === '1')
+  .default('false'),
   MINIO_ACCESS_KEY: requiredInProd('minioadmin'),
   MINIO_SECRET_KEY: requiredInProd('minioadmin123'),
   MINIO_BUCKET: z.string().default('unitypulse'),

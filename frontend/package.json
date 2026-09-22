@@ -25,6 +25,7 @@
 		"@capacitor/cli": "^8.5.0",
 		"@capacitor/core": "^8.5.0",
 		"@lucide/svelte": "^1.33.0",
-		"lucide-svelte": "^1.0.1"
+		"lucide-svelte": "^1.0.1",
+		"undici": "^8.11.0"
 	}
 }

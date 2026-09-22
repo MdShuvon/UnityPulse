@@ -101,3 +101,7 @@ project_structure_clean.txt
 
 # Certs
 certs/
+
+check-db.sql
+
+frontend-dev.log

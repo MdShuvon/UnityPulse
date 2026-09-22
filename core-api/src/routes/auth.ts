@@ -80,12 +80,28 @@ export async function authRoutes(app: FastifyInstance) {
     }
 
     // Session fixation defence: new session id at the privilege boundary.
-    await new Promise<void>((resolve, reject) =>
-      (req.session as any).regenerate((err: Error | null) => (err ? reject(err) : resolve())),
-    );
+    // Write userId/role INSIDE the regenerate callback so they land on the
+    // fresh session object, then explicitly persist before responding.
+    // Regenerate first to prevent session fixation, then set fields on the
+    // FRESH req.session object and persist. @fastify/session re-assigns
+    // req.session inside the regenerate callback, so any write before the
+    // callback fires is lost.
+    await new Promise<void>((resolve, reject) => {
+      req.session.regenerate((err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
 
     req.session.userId = user.id;
     req.session.role = user.role;
+
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
 
     return reply.send({ message: 'Login সফল', user });
   });
@@ -146,13 +162,24 @@ export async function authRoutes(app: FastifyInstance) {
           profilePhoto: payload.picture,
         });
 
-        await new Promise<void>((resolve, reject) =>
-          (req.session as any).regenerate((err: Error | null) => (err ? reject(err) : resolve())),
-        );
+        await new Promise<void>((resolve, reject) => {
+          req.session.regenerate((err) => {
+            if (err) return reject(err);
+            resolve();
+          });
+        });
+
         req.session.userId = user.id;
         req.session.role = user.role;
 
-        return reply.redirect(`${env.FRONTEND_URL}/home`);
+        await new Promise<void>((resolve, reject) => {
+          req.session.save((err) => {
+            if (err) return reject(err);
+            resolve();
+          });
+        });
+
+        return reply.redirect(`${env.FRONTEND_URL}/`);
       } catch (error: any) {
         req.log.error({ err: error }, 'Google OAuth error');
         return reply.redirect(`${env.FRONTEND_URL}/login?error=google_auth_failed`);

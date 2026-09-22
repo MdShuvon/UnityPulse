@@ -3,6 +3,8 @@
   import { onMount } from "svelte";
   import { page as pageStore } from "$app/stores";
   import { goto } from "$app/navigation";
+  
+  let { data } = $props(); 
   import {
     Loader2,
     User,
@@ -29,7 +31,7 @@
   } from "lucide-svelte";
 
   let isLoading = $state(true);
-  let user = $state<any>(null);
+  let user = $derived(data.user);
   let posts = $state<any[]>([]);
   let error = $state("");
   let activeTab = $state<"posts" | "about" | "activity">("posts");
@@ -104,16 +106,7 @@
 
   async function fetchProfile() {
     try {
-      const userRes = await fetch("https://localhost:3001/auth/me", {
-        credentials: "include",
-      });
-      if (userRes.ok) {
-        user = await userRes.json();
-      } else {
-        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
-        return;
-      }
-
+      // user আসছে SSR layout data থেকে — আর /auth/me কল করার দরকার নেই
       const postsRes = await fetch(
         `https://localhost:3001/users/${user.id}/posts?limit=20&page=1`,
         { credentials: "include" },
@@ -128,7 +121,7 @@
           likedComments = new Set(JSON.parse(savedCommentLikes));
       }
     } catch (err) {
-      error = "প্রোফাইল লোড করতে সমস্যা হয়েছে";
+      error = "পোস্ট লোড করতে সমস্যা হয়েছে";
     } finally {
       isLoading = false;
     }

@@ -1,5 +1,6 @@
 # docker-compose.yml — fixes issue #15
 services:
+  
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -7,6 +8,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
       POSTGRES_DB: ${POSTGRES_DB:-appdb}
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -34,23 +37,22 @@ services:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:?set in .env}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?set in .env}
     command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     volumes:
       - minio_data:/data
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://localhost:9000/minio/health/live || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
 
   minio-init:
-    image: minio/mc
+    image: quay.io/minio/mc
     depends_on:
-      minio:
-        condition: service_healthy
+      - minio
     entrypoint: >
       /bin/sh -c "
-      mc alias set local http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY} &&
-      mc mb --ignore-existing local/unitypulse
+      until mc alias set local http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}; do echo 'waiting for minio...'; sleep 2; done &&
+      mc mb --ignore-existing local/unitypulse &&
+      mc anonymous set download local/unitypulse/public &&
+      echo 'Bucket ready: unitypulse/public is anonymous-readable'
       "
 
   core-api:
@@ -65,24 +67,30 @@ services:
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_USE_SSL: "false"
-      SESSION_SECRET: ${SESSION_SECRET:?set in .env}
-      NID_ENCRYPTION_KEY: ${NID_ENCRYPTION_KEY:?set in .env}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      SESSION_SECRET: ${SESSION_SECRET}
+      NID_ENCRYPTION_KEY: ${NID_ENCRYPTION_KEY}
       PAYMENT_MODE: ${PAYMENT_MODE:-production}
-      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:3001}
-      SSLCOMMERZ_SANDBOX: ${SSLCOMMERZ_SANDBOX:-true}
+      SSLCOMMERZ_STORE_ID: ${SSLCOMMERZ_STORE_ID}
+      SSLCOMMERZ_STORE_PASSWORD: ${SSLCOMMERZ_STORE_PASSWORD}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-https://localhost:3001}
+      FRONTEND_URL: https://localhost:5173
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      HTTPS_CERT_PATH: /app/certs/localhost+2.pem
+      HTTPS_KEY_PATH: /app/certs/localhost+2-key.pem
     ports:
       - "3001:3001"
+    volumes:
+      - ./certs:/app/certs:ro
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      minio:
-        condition: service_healthy
       minio-init:
         condition: service_completed_successfully
     command: sh -c "npx prisma migrate deploy 2>/dev/null || npx prisma db push --skip-generate; node dist/server.js"
-
 volumes:
   postgres_data:
   redis_data:

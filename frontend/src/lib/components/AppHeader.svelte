@@ -17,7 +17,7 @@
     Bell,
   } from "lucide-svelte";
   import { clickOutside } from "$lib/actions/clickOutside";
-  import { getUserContext } from "$lib/stores/user.svelte";
+  import { goto } from '$app/navigation';
 
   let searchOpen = $state(false);
   let searchQuery = $state("");
@@ -79,14 +79,13 @@
   let isMobile = $state(false);
   
   // Notification state — badge count only
-  const userContext = getUserContext();
   let unreadCount = $state(0);
   let eventSource: EventSource | null = null;
   let reconnectDelay = 1000;
   const MAX_RECONNECT_DELAY = 30000;
 
   async function fetchUnreadCount() {
-    if (!userContext.value) {
+    if (!user) {
       unreadCount = 0;
       return;
     }
@@ -104,7 +103,7 @@
   }
 
   function connectSSE() {
-    if (!userContext.value) return;
+    if (!user) return;
     if (eventSource) return; // already connected
 
     try {
@@ -135,7 +134,7 @@
 
         // Auto-reconnect with exponential backoff
         setTimeout(() => {
-          if (userContext.value) connectSSE();
+          if (user) connectSSE();
         }, reconnectDelay);
 
         reconnectDelay = Math.min(reconnectDelay * 2, MAX_RECONNECT_DELAY);
@@ -152,30 +151,20 @@
     }
   }
 
-  // user ready হলে — count fetch + SSE connect
-  $effect(() => {
-    if (userContext.value) {
-      fetchUnreadCount();
-      connectSSE();
-    } else {
-      unreadCount = 0;
-      disconnectSSE();
-    }
-  });
+// user ready হলে — count fetch + SSE connect (একবারই)
+$effect(() => {
+  if (user) {
+    fetchUnreadCount();
+    connectSSE();
+  } else {
+    unreadCount = 0;
+    disconnectSSE();
+  }
 
-  // Component unmount হলে SSE disconnect
-  $effect(() => {
-    return () => {
-      disconnectSSE();
-    };
-  });
-
-  // Path বদলালে badge refresh (fallback — SSE fail হলে কাজে আসবে)
-  $effect(() => {
-    if (userContext.value) {
-      fetchUnreadCount();
-    }
-  });
+  return () => {
+    disconnectSSE();
+  };
+});
 
   $effect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
@@ -187,21 +176,21 @@
     return () => mq.removeEventListener("change", handler);
   });
 
-  async function handleLogout() {
-    try {
-      await fetch("https://localhost:3001/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-      showDesktopProfileMenu = false;
-      showMobileProfileMenu = false;
-      showMoreMenu = false;
-      window.location.href = "/";
-    } catch (err) {
-      console.error("Logout failed:", err);
-      alert("Logout-এ সমস্যা হয়েছে");
-    }
+async function handleLogout() {
+  try {
+    await fetch("https://localhost:3001/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+    showDesktopProfileMenu = false;
+    showMobileProfileMenu = false;
+    showMoreMenu = false;
+    await goto("/", { invalidateAll: true });
+  } catch (err) {
+    console.error("Logout failed:", err);
+    alert("Logout-এ সমস্যা হয়েছে");
   }
+}
 </script>
 
 <!-- ─── Desktop Header ─────────────────────────── -->
@@ -342,39 +331,15 @@
     </div>
   </div>
 
-  <nav class="header-nav">
-    <a
-      href="/"
-      class="nav-link"
-      class:active={currentPath === "/" || currentPath === "/home"}>Home</a
-    >
-    <a href="/about" class="nav-link" class:active={currentPath === "/about"}
-      >About us</a
-    >
-    <a href="/press" class="nav-link" class:active={currentPath === "/press"}
-      >Press</a
-    >
-    <a
-      href="/career"
-      class="nav-link"
-      class:active={currentPath.startsWith("/career")}>Career</a
-    >
-    <a
-      href="/tasks"
-      class="nav-link"
-      class:active={currentPath.startsWith("/tasks")}>Task</a
-    >
-    <a
-      href="/leaderboard"
-      class="nav-link"
-      class:active={currentPath === "/leaderboard"}>Leaderboard</a
-    >
-    <a
-      href="/donate"
-      class="nav-link"
-      class:active={currentPath.startsWith("/donate")}>Donation</a
-    >
-  </nav>
+<nav class="header-nav">
+  <a href="/" data-sveltekit-preload-data="hover" class="nav-link" class:active={currentPath === "/home"}>Home</a>
+  <a href="/about" data-sveltekit-preload-data="hover" class="nav-link" class:active={currentPath === "/about"}>About us</a>
+  <a href="/press" data-sveltekit-preload-data="hover" class="nav-link" class:active={currentPath === "/press"}>Press</a>
+  <a href="/career" data-sveltekit-preload-data="hover" class="nav-link" class:active={currentPath.startsWith("/career")}>Career</a>
+  <a href="/tasks" data-sveltekit-preload-data="hover" class="nav-link" class:active={currentPath.startsWith("/tasks")}>Task</a>
+  <a href="/leaderboard" data-sveltekit-preload-data="hover" class="nav-link" class:active={currentPath === "/leaderboard"}>Leaderboard</a>
+  <a href="/donate" data-sveltekit-preload-data="hover" class="nav-link" class:active={currentPath.startsWith("/donate")}>Donation</a>
+</nav>
 
   <div class="header-right">
     {#if showAdminButton === true && (user?.role === "SUPER_ADMIN" || user?.role === "LOCAL_ADMIN")}
@@ -430,11 +395,7 @@
             <a
               href="/profile"
               class="dropdown-item"
-              onclick={(e) => {
-                e.preventDefault();
-                showDesktopProfileMenu = false;
-                window.location.href = "/profile";
-              }}
+              onclick={() => { showDesktopProfileMenu = false; }}
             >
               <User size={16} />
               <span>My Profile</span>
@@ -442,11 +403,7 @@
             <a
               href="/tasks/mine"
               class="dropdown-item"
-              onclick={(e) => {
-                e.preventDefault();
-                showDesktopProfileMenu = false;
-                window.location.href = "/tasks/mine";
-              }}
+              onclick={() => (showDesktopProfileMenu = false)}
             >
               <CheckSquare size={16} />
               <span>My Tasks</span>
@@ -543,11 +500,7 @@
             <a
               href="/profile"
               class="dropdown-item"
-              onclick={(e) => {
-                e.preventDefault();
-                showMobileProfileMenu = false;
-                window.location.href = "/profile";
-              }}
+              onclick={() => (showMobileProfileMenu = false)}
             >
               <User size={16} />
               <span>My Profile</span>
@@ -555,11 +508,7 @@
             <a
               href="/tasks/mine"
               class="dropdown-item"
-              onclick={(e) => {
-                e.preventDefault();
-                showMobileProfileMenu = false;
-                window.location.href = "/tasks/mine";
-              }}
+              onclick={() => (showMobileProfileMenu = false)}
             >
               <CheckSquare size={16} />
               <span>My Tasks</span>
@@ -707,43 +656,23 @@
 
 <!-- ─── Mobile Bottom Nav ──────────────────────── -->
 <nav class="mobile-bottom-nav">
-  <a
-    href="/"
-    class="bottom-nav-item"
-    class:active={currentPath === "/" || currentPath === "/home"}
-  >
+  <a href="/" data-sveltekit-preload-data="hover" class="bottom-nav-item" class:active={currentPath === "/home"}>
     <Home size={20} class="nav-icon" />
     <span>Home</span>
   </a>
-  <a
-    href="/press"
-    class="bottom-nav-item"
-    class:active={currentPath === "/press"}
-  >
+  <a href="/press" data-sveltekit-preload-data="hover" class="bottom-nav-item" class:active={currentPath === "/press"}>
     <Newspaper size={20} class="nav-icon" />
     <span>Press</span>
   </a>
-  <a
-    href="/tasks"
-    class="bottom-nav-item"
-    class:active={currentPath.startsWith("/tasks")}
-  >
+  <a href="/tasks" data-sveltekit-preload-data="hover" class="bottom-nav-item" class:active={currentPath.startsWith("/tasks")}>
     <CheckSquare size={20} class="nav-icon" />
     <span>Task</span>
   </a>
-  <a
-    href="/donate"
-    class="bottom-nav-item"
-    class:active={currentPath.startsWith("/donate")}
-  >
+  <a href="/donate" data-sveltekit-preload-data="hover" class="bottom-nav-item" class:active={currentPath.startsWith("/donate")}>
     <Heart size={20} class="nav-icon" />
     <span>Donate</span>
   </a>
-  <a
-    href="/profile"
-    class="bottom-nav-item"
-    class:active={currentPath === "/profile"}
-  >
+  <a href="/profile" data-sveltekit-preload-data="hover" class="bottom-nav-item" class:active={currentPath === "/profile"}>
     <User size={20} class="nav-icon" />
     <span>Profile</span>
   </a>
