@@ -174,11 +174,11 @@
   .bangla { font-family: 'Hind Siliguri', sans-serif; }
   .mono { font-family: 'DM Mono', monospace; }
 
-  .main-content {
+  /* .main-content {
     max-width: 1200px;
     margin: 0 auto;
     padding: 1.5rem 2rem;
-  }
+  } */
 
   .back-btn {
     display: flex;
@@ -351,7 +351,7 @@
   .btn-primary:hover { background: #153F36; }
 
   @media (max-width: 768px) {
-    .main-content { max-width: 100%; padding: 1rem; }
+    /* .main-content { max-width: 100%; padding: 1rem; } */
     .page-hero { min-height: 20vh; }
     .hero-title { font-size: 22px; }
   }

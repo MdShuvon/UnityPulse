@@ -691,16 +691,20 @@ async function handleLogout() {
     padding: 0.875rem 1.5rem;
     background: #ffffff;
     border-bottom: 1px solid #e4ede9;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
+    height: 64px;
+    box-sizing: border-box;
   }
 
   .header-left {
     justify-self: start;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
   }
   .header-nav {
     justify-self: center;
@@ -1002,9 +1006,13 @@ async function handleLogout() {
     padding: 0.75rem 1rem;
     background: #ffffff;
     border-bottom: 1px solid #e4ede9;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
+    height: 56px;
+    box-sizing: border-box;
   }
 
   .mobile-actions {
@@ -1045,7 +1053,7 @@ async function handleLogout() {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-left: 8px;
+    /* margin-left সরানো — header-left-এর gap দিয়েই spacing হবে */
   }
   .search-trigger {
     display: flex;

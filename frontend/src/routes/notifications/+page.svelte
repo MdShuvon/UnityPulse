@@ -403,7 +403,7 @@
   }
   .bangla { font-family: 'Hind Siliguri', sans-serif; }
 
-  .main-content {
+  /* .main-content {
     max-width: 800px;
     margin: 0 auto;
     padding: 2rem 2rem 3rem;
@@ -413,7 +413,7 @@
       max-width: 100%;
       padding: 1.5rem 1rem 3rem;
     }
-  }
+  } */
 
   .page-header {
     display: flex;

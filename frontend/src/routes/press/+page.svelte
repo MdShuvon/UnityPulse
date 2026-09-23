@@ -402,7 +402,7 @@
     font-family: "DM Mono", monospace;
   }
 
-  .main-content {
+  /* .main-content {
     max-width: 1200px;
     margin: 0 auto;
     padding: 1.5rem 2rem;
@@ -413,7 +413,7 @@
       padding: 1rem;
     }
   }
-  
+   */
   .page-hero {
     position: relative;
     border-radius: 30px 46px 30px 30px;

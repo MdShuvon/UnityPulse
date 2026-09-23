@@ -243,11 +243,11 @@
   .bangla { font-family: 'Hind Siliguri', sans-serif; }
   .mono { font-family: 'DM Mono', monospace; }
 
-  .main-content {
+  /* .main-content {
     max-width: 1200px;
     margin: 0 auto;
     padding: 1.5rem 2rem;
-  }
+  } */
 
   .page-hero {
     position: relative;
@@ -430,7 +430,7 @@
   .empty-body { font-size: 13.5px; color: #5B675F; margin-top: 6px; }
 
   @media (max-width: 768px) {
-    .main-content { max-width: 100%; padding: 1rem; }
+    /* .main-content { max-width: 100%; padding: 1rem; } */
     .page-hero { min-height: 20vh; }
     .hero-title { font-size: 24px; }
     .podium { grid-template-columns: 1fr; }

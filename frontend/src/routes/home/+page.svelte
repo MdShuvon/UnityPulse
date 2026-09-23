@@ -238,8 +238,8 @@
   }
   .home-page { min-height: 100vh; font-family: "DM Sans", sans-serif; background: #f6f4ee; color: #16231f; }
   .bangla { font-family: "Hind Siliguri", sans-serif; }
-  .main-content { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; }
-  @media (max-width: 768px) { .main-content { max-width: 100%; padding: 1rem; } }
+  /* .main-content { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; } */
+  /* @media (max-width: 768px) { .main-content { max-width: 100%; padding: 1rem; } } */
   .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.2s; }
   .btn-primary { background: #1f5d50; color: white; }
   .btn-primary:hover { background: #153f36; }

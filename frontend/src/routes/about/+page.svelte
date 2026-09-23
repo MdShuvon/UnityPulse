@@ -116,11 +116,11 @@
   }
   .bangla { font-family: 'Hind Siliguri', sans-serif; }
 
-  .main-content {
+  /* .main-content {
     max-width: 1200px;
     margin: 0 auto;
     padding: 1.5rem 2rem;
-  }
+  } */
 
   /* ─── Hero ─── */
   .page-hero {
@@ -340,7 +340,7 @@
 
   /* ─── Responsive ─── */
   @media (max-width: 768px) {
-    .main-content { max-width: 100%; padding: 1rem; }
+    /* .main-content { max-width: 100%; padding: 1rem; } */
     .page-hero { min-height: 35vh; }
     .hero-title { font-size: 26px; }
     .hero-content { padding: 20px; }

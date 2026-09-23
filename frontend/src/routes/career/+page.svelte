@@ -204,17 +204,17 @@
     font-family: "DM Mono", monospace;
   }
 
-  .main-content {
+  /* .main-content {
     max-width: 1200px;
     margin: 0 auto;
     padding: 1.5rem 2rem;
-  }
-  @media (max-width: 768px) {
+  } */
+  /* @media (max-width: 768px) {
     .main-content {
       max-width: 100%;
       padding: 1rem;
     }
-  }
+  } */
   /* .career-header {
     text-align: center;
     padding: 6px 0 4px;

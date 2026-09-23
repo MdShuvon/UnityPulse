@@ -1,5 +1,6 @@
 <!--- frontend/src/routes/+layout.svelte --->
 <script lang="ts">
+  import '../app.css';
   import AppHeader from '$lib/components/AppHeader.svelte';
   import NotificationToast from '$lib/components/NotificationToast.svelte';
   import { page } from '$app/stores';
@@ -85,12 +86,6 @@
     background: linear-gradient(180deg, rgba(184,80,63,0.11) 0%, #F6F4EE 35%, #F6F4EE 75%, rgba(184,80,63,0.08) 100%) !important;
   }
 
-  :global(.main-content) {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1.5rem 2rem;
-  }
-
   :global(.cause-big),
   :global(.detail-hero) {
     min-height: 50vh !important;
@@ -103,10 +98,6 @@
   @media (max-width: 768px) {
     .layout-footer {
       padding: 16px;
-    }
-    :global(.main-content) {
-      max-width: 100%;
-      padding: 1rem;
     }
     :global(.cause-big),
     :global(.detail-hero) {
